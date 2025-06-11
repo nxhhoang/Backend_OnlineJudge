@@ -13,8 +13,8 @@ export interface IUser extends Document {
   email: string,
   username: string;
   password: string;
-  passwordResetToken: String;
-  passwordResetTokenExpires: Date;
+  passwordResetToken: String | null;
+  passwordResetTokenExpires: Date | null;
 
   tokens: AuthToken[],
   profile: {
@@ -65,7 +65,7 @@ UserSchema.pre('save', function(next) {
       next();
     });
   });
-})
+});
 
 UserSchema.methods.comparePassword = function(candidatePassword: any, done: (err: Error | null, isMatch: boolean) => void) {
   bcrypt.compare(candidatePassword, this.password, function(err: Error | null, isMatch: boolean) {

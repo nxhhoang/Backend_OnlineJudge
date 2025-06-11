@@ -13,18 +13,14 @@ export function initPassport() {
       usernameField: "username",
       passwordField: "password"
     }, async (username, password, done) => {
-      console.log({
-        username,
-        password
-      })
       try {
         const user = await User.findOne({ username });
         if (!user) {
           return done(null, false, { message: "Username not found" });
         }
         user?.comparePassword(password, (err: Error | null, isMatch: boolean) => {
+          console.log(err);
           if (err) {
-            console.error('just a hi and error', err);
             return done(err);
           }
           if (isMatch) {
@@ -43,11 +39,9 @@ export function initPassport() {
       clientSecret: process.env.AUTH_GITHUB_SECRET!,
       callbackURL,
       passReqToCallback: true,
-      scope: ['user:email']
+      scope: ['user:email', 'read:user']
     }, async (req: any, accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: any) => void) => {
-
       const existingUser = await User.findOne({ githubId: profile.id });
-
       if (existingUser) {
         req.flash('errors', { msg: "There is already a Github account that belongs to you, Sign in with that account or delete it, then link it to your current account" });
         return done(null, existingUser);
@@ -60,7 +54,7 @@ export function initPassport() {
             req.flash('errors', { msg: "There is no user with the given user id" });
             return done(null);
           }
-          user.email = profile.emails[0] ?? ''; // this shouldn't fail
+          user.email = profile.emails[0].value ?? ''; // this shouldn't fail
           user.username = profile.username;
           user.githubId = profile.id;
           user.tokens.push({ kind: 'github', accessToken });
@@ -79,8 +73,10 @@ export function initPassport() {
           email: profile.emails[0].value ?? '', // this shouldn't fail
           githubId: profile.id,
           username: profile.username,
-          name: profile.name,
-          photos: profile.photos,
+          profile: {
+            name: profile.name,
+            photos: profile.photos,
+          },
           tokens: [{ kind: 'github', accessToken }]
         });
         const savedUser = await user.save();

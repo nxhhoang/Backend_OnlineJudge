@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import connectDB from './mongodb/connection';
 import connectRedis from './redis/connection';
 import { initPassport } from './config/passport';
+import { User } from './mongodb/user';
 
 config();
 

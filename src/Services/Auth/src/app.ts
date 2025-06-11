@@ -12,8 +12,8 @@ import { Request, Response, NextFunction } from "express";
 import { redisClient } from './redis/connection';
 import { RedisStore } from "connect-redis"
 import DualStore from './lib/dual-store';
-import * as userControllers from './controllers/user';
 import path from 'path';
+import * as userControllers from './controllers/user'
 
 config();
 
@@ -68,20 +68,9 @@ export default () => {
   }));
 
   app.use('/auth', authRoutes);
-  app.get('/profile', (req: Request, res: Response) => {
-    if (req.isAuthenticated()) {
-      res.send(`<h1>Hello ${req.user}</h1><a href="/logout">Logout</a>`);
-    } else {
-      res.redirect('/login');
-    }
-  });
 
-  app.get('/login', userControllers.getLogin);
-  app.post('/login', userControllers.postLogin);
-  app.get('/signup', userControllers.getSignup);
-  app.post('/signup', userControllers.postSignup);
-  app.get('/logout', userControllers.getLogout);
-
+  app.post('/profile/password', userControllers.postPassword);
+  app.get('/profile', userControllers.getProfile);
   app.get('/', (req, res) => {
     res.send('<h1>Home</h1><a href="/profile">Profile</a>');
   });
