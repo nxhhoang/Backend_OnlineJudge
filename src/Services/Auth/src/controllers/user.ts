@@ -164,7 +164,9 @@ export const getProfile = (req: Request, res: Response) => {
       titie: 'Profile',
       user: req.user as IUser,
       token,
-      csrfToken: res.locals._csrf
+      csrfToken: res.locals._csrf,
+      errors: req.flash('errors'),
+      success: req.flash('success')
     })
   } else {
     res.redirect('/auth/login');

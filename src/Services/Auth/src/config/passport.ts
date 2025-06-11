@@ -41,9 +41,14 @@ export function initPassport() {
       passReqToCallback: true,
       scope: ['user:email', 'read:user']
     }, async (req: any, accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: any) => void) => {
-      const existingUser = await User.findOne({ githubId: profile.id });
+      let existingUser = await User.findOne({ githubId: profile.id });
       if (existingUser) {
-        req.flash('errors', { msg: "There is already a Github account that belongs to you, Sign in with that account or delete it, then link it to your current account" });
+        req.flash('errors', { msg: "There is already a Github account that belongs to you, Sign in with that account!" });
+        return done(null, existingUser);
+      }
+      existingUser = await User.findOne({ email: profile.emails[0].value });
+      if (existingUser) {
+        req.flash('errors', 'A user with that email already exists.');
         return done(null, existingUser);
       }
 
@@ -61,7 +66,7 @@ export function initPassport() {
           user.profile.name = profile.displayName;
           user.profile.photos = profile.photos;
           const savedUser = await user.save();
-          req.flash('info', { msg: "Github account has been linked" });
+          req.flash('success', { msg: "Github account has been linked" });
           done(null, savedUser);
         } catch (err) {
           if (err) {
@@ -80,7 +85,7 @@ export function initPassport() {
           tokens: [{ kind: 'github', accessToken }]
         });
         const savedUser = await user.save();
-        req.flash('info', { msg: "Github account has been linked" });
+        req.flash('success', { msg: "Github account has been linked" });
         done(null, savedUser);
       }
     })
@@ -106,7 +111,7 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
   if (req.isAuthenticated()) {
     return next();
   }
-  res.redirect('/login');
+  res.redirect('/auth/login');
 }
 
 // authorize middleware
