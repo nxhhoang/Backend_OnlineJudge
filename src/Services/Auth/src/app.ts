@@ -6,9 +6,9 @@ const MongoStore = require("connect-mongo");
 import { v4 as uuid } from 'uuid'
 import passport from 'passport'
 import authRoutes from './routers/auth';
+import debugRoutes from './routers/debug'
 import flash from "express-flash";
 import lusca from 'lusca';
-import { Request, Response, NextFunction } from "express";
 import { redisClient } from './redis/connection';
 import { RedisStore } from "connect-redis"
 import DualStore from './lib/dual-store';
@@ -67,42 +67,11 @@ export default () => {
     referrerPolicy: 'same-origin'
   }));
 
+  app.use('/debug', debugRoutes);
   app.use('/auth', authRoutes);
-
-  app.post('/profile/password', userControllers.postPassword);
   app.get('/profile', userControllers.getProfile);
   app.get('/', (req, res) => {
     res.send('<h1>Home</h1><a href="/profile">Profile</a>');
-  });
-
-  app.get('/debug-session', (req: Request, res: Response) => {
-    res.json({
-      sessionID: req.sessionID,
-      user: req.user,
-      session: req.session
-    });
-  });
-
-  app.get('/debug-session/:id', async (req, res) => {
-    const sessionId = req.params.id;
-
-    // Check Redis
-    redisStore.get(sessionId, (redisErr, redisSession) => {
-      // Check MongoDB
-      mongoStore.get(sessionId, (mongoErr: any, mongoSession: any) => {
-        res.json({
-          sessionId,
-          redis: {
-            error: redisErr,
-            session: redisSession
-          },
-          mongo: {
-            error: mongoErr,
-            session: mongoSession
-          }
-        });
-      });
-    });
   });
   return app;
 }

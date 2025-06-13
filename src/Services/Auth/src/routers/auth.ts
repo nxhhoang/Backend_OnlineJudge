@@ -1,8 +1,6 @@
 import { Router } from "express";
 import passport from 'passport';
-import { Request, Response, NextFunction } from "express";
 import * as userControllers from '../controllers/user';
-
 const router = Router();
 
 router.get(
@@ -28,7 +26,8 @@ router.post('/signup', userControllers.postSignup);
 router.get('/logout', userControllers.getLogout);
 router.get('/forgot', userControllers.getForgot);
 router.post('/forgot', userControllers.postForgot);
+router.post('/password', userControllers.postPassword);
 router.get('/reset/:token', userControllers.getReset);
 router.post('/reset/:token', userControllers.postReset);
-
+router.get('/unlink/:provider', userControllers.getUnlink);
 export default router;

@@ -19,7 +19,6 @@ export function initPassport() {
           return done(null, false, { message: "Username not found" });
         }
         user?.comparePassword(password, (err: Error | null, isMatch: boolean) => {
-          console.log(err);
           if (err) {
             return done(err);
           }

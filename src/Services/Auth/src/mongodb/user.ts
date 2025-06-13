@@ -7,8 +7,8 @@ export interface AuthToken {
 }
 
 export interface IUser extends Document {
-  githubId: string;
-  googleId: string;
+  githubId: string | null;
+  googleId: string | null;
 
   email: string,
   username: string;

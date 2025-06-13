@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 import passport from 'passport'
-import { User, IUser } from '../mongodb/user'
+import { User, IUser, AuthToken } from '../mongodb/user'
 import { Request, Response, NextFunction } from 'express'
 import { IVerifyOptions } from 'passport-local'
 import { Result, ValidationError, body, check, validationResult } from 'express-validator'
@@ -274,7 +274,7 @@ export const postForgot = async (req: Request, res: Response, next: NextFunction
 }
 
 /**
-  * @Route GET /reset
+  * @Route GET /reset/:token
 */
 export const getReset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   if (req.isAuthenticated()) {
@@ -301,7 +301,7 @@ export const getReset = async (req: Request, res: Response, next: NextFunction):
 }
 
 /**
-  * @Route POST /reset
+  * @Route POST /reset/:token
 */
 export const postReset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   await body('password')
@@ -337,5 +337,26 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
   } catch (err) {
     next(err);
     return res.redirect('/auth/forgot');
+  }
+}
+
+/**
+  * @Route GET /unlink/:provider
+*/
+export const getUnlink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const provider = req.params.provider;
+  const reqUser = req.user as IUser;
+  try {
+    const user = await User.findById(reqUser.id);
+    if (!user) {
+      req.flash('errors', `Can't unlink`);
+      return res.redirect('/');
+    }
+    // user.githubId = null;
+    user.tokens = user.tokens.filter((token: AuthToken) => token.kind !== provider);
+    await user.save();
+    req.flash('success', `${provider} account has been unlinked`);
+  } catch (err) {
+    next(err);
   }
 }
