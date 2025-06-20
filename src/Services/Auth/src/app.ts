@@ -7,13 +7,15 @@ import { v4 as uuid } from 'uuid'
 import passport from 'passport'
 import authRoutes from './routers/auth';
 import debugRoutes from './routers/debug'
+import authViewRoutes from './routers/auth.view'
 import flash from "express-flash";
 import lusca from 'lusca';
 import { redisClient } from './redis/connection';
 import { RedisStore } from "connect-redis"
 import DualStore from './lib/dual-store';
 import path from 'path';
-import * as userControllers from './controllers/user'
+import cors from 'cors';
+import morgan = require('morgan');
 
 config();
 
@@ -35,9 +37,10 @@ export default () => {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.set('views', path.join(__dirname, '../views'));
-  app.engine('html', require('ejs').renderFile); // Use EJS to render HTML
-  app.set('view engine', 'html');
+  // app.set('views', path.join(__dirname, '../views'));
+  // app.engine('html', require('ejs').renderFile); // Use EJS to render HTML
+  // app.set('view engine', 'html');
+  app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'tiny'));
   app.use(
     session({
       genid: (_) => {
@@ -52,13 +55,14 @@ export default () => {
       }
     })
   );
-
+  app.use(cors({
+    credentials: true
+  }))
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(flash());
   app.use(lusca({
     csrf: true,
-    // csp: { /* ... */ },
     xframe: 'SAMEORIGIN',
     p3p: 'ABCDEF',
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -69,9 +73,6 @@ export default () => {
 
   app.use('/debug', debugRoutes);
   app.use('/auth', authRoutes);
-  app.get('/profile', userControllers.getProfile);
-  app.get('/', (req, res) => {
-    res.send('<h1>Home</h1><a href="/profile">Profile</a>');
-  });
+  app.use('/view/auth', authViewRoutes);
   return app;
 }

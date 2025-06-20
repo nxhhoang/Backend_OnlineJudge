@@ -1,37 +1,17 @@
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 import passport from 'passport'
-import { User, IUser, AuthToken } from '../mongodb/user'
+import { User, IUser } from '../mongodb/user'
 import { Request, Response, NextFunction } from 'express'
 import { IVerifyOptions } from 'passport-local'
-import { Result, ValidationError, body, check, validationResult } from 'express-validator'
+import { body, validationResult } from 'express-validator'
 import '../config/passport'
 require("dotenv").config();
 
 /**
-  * Login @Route GET /login
+  * Login @Route POST /auth/login
 */
-export const getLogin = (req: Request, res: Response): void => {
-  if (req.user) {
-    return res.redirect('/');
-  }
-  const token = res.locals._csrf;
-  const errorMessages = req.flash('errors') as unknown as string[];
-  const passportErrors = req.flash('error') as unknown as string[];
-  const allErrors = [...errorMessages, ...passportErrors];
-
-  res.render('login_signup', {
-    title: 'Log in',
-    token,
-    allErrors,
-    activeTab: 'login'
-  });
-}
-
-/**
-  * Login @Route POST /login
-*/
-export const postLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const postLogin = async (req: Request, res: Response, next: NextFunction) => {
   await body('password')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
     .run(req);
@@ -44,26 +24,34 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    req.flash("errors", errors.array().map(err => err.msg));
-    return res.redirect('/auth/login');
+    res.status(400).json({ errors: errors.array() });
+    return;
   }
 
   passport.authenticate('local', (err: Error, user: IUser, info: IVerifyOptions) => {
     if (err) {
-      req.flash('error', 'An error occurred during authentication');
-      return res.redirect('/auth/login');
+      res.status(500).json({ message: 'An error occurred during authentication' });
+      return;
     }
     if (!user) {
-      req.flash('error', info.message || 'Invalid username or password');
-      return res.redirect('/auth/login');
+      res.status(400).json({ message: info.message || 'Invalid username or password' });
+      return;
     }
 
     req.logIn(user, (loginErr) => {
       if (loginErr) {
-        req.flash('error', 'Could not login');
-        return res.redirect('/auth/login');
+        res.status(500).json({ message: 'Could not login' });
+        return;
       }
-      return res.redirect('/');
+      res.status(200).json({
+        message: 'Login successfully',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email
+        }
+      });
+      return;
     });
   })(req, res, next);
 };
@@ -73,35 +61,18 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
 */
 export const getLogout = (req: Request, res: Response): void => {
   req.logout((err) => {
-    res.redirect('/auth/login');
+    if (err) {
+      res.status(500).json({ message: 'Error during logging out' });
+      return;
+    }
+    res.status(200).json({ message: 'Log out successfully' });
   });
 }
 
 /**
-  * SignUp @Route GET /signup
+  * SignUp @Route POST /auth/signup
 */
-export const getSignup = (req: Request, res: Response): void => {
-  if (req.user) {
-    return res.redirect("/");
-  }
-
-  const token = res.locals._csrf;
-  const errorMessages = req.flash('errors') as unknown as string[];
-  const passportErrors = req.flash('error') as unknown as string[];
-  const allErrors = [...errorMessages, ...passportErrors];
-
-  res.render('login_signup', {
-    title: 'Sign up',
-    token,
-    allErrors,
-    activeTab: 'signup'
-  })
-}
-
-/**
-  * SignUp @Route POST /signup
-*/
-export const postSignup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const postSignup = async (req: Request, res: Response, next: NextFunction) => {
   await body('email')
     .not().isEmpty().withMessage('Email must not be empty')
     .isEmail().withMessage('Email is Invalid')
@@ -118,8 +89,8 @@ export const postSignup = async (req: Request, res: Response, next: NextFunction
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    req.flash("errors", errors.array().map(err => err.msg));
-    return res.redirect('/auth/login');
+    res.status(500).json({ errors: errors.array() });
+    return;
   }
 
   const user = new User({
@@ -130,46 +101,32 @@ export const postSignup = async (req: Request, res: Response, next: NextFunction
 
   try {
     if (await User.findOne({ email: req.body.email })) {
-      req.flash('errors', 'A user with that email already exists.');
-      return res.redirect('/auth/signup');
+      res.status(400).json({ message: 'A user with that email already exists.' });
+      return;
     }
 
     if (await User.findOne({ username: req.body.username })) {
-      req.flash('errors', 'A user with that username already exists.');
-      return res.redirect('/auth/signup');
+      res.status(400).json({ message: 'A user with that username already exists.' });
+      return;
     }
     const savedUser = await user.save();
     req.logIn(savedUser, (loginErr) => {
       if (loginErr) {
-        req.flash('error', 'Could not login');
-        return res.redirect('/auth/login');
+        res.status(500).json({ message: 'Could not login' });
+        return;
       }
-      return res.redirect('/');
+      res.status(200).json({
+        message: 'Sign up successfully',
+        user: {
+          id: savedUser.id,
+          username: savedUser.username,
+          email: savedUser.email
+        }
+      });
     });
-
   } catch (err) {
-    req.flash('errors', 'An error occurred');
-    return res.redirect('/auth/signup');
-  }
-}
-
-/**
-  * @Route GET /profile
-*/
-export const getProfile = (req: Request, res: Response) => {
-  if (req.isAuthenticated()) {
-    // res.send(`<h1>Hello ${req.user}</h1><a href="/logout">Logout</a>`);
-    const token = res.locals._csrf;
-    res.render('profile', {
-      titie: 'Profile',
-      user: req.user as IUser,
-      token,
-      csrfToken: res.locals._csrf,
-      errors: req.flash('errors'),
-      success: req.flash('success')
-    })
-  } else {
-    res.redirect('/auth/login');
+    console.log(err);
+    res.status(500).json({ message: 'An error occurred during sign up' });
   }
 }
 
@@ -187,43 +144,38 @@ export const postPassword = async (req: Request, res: Response, next: NextFuncti
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    req.flash("errors", errors.array().map(err => err.msg));
-    return res.redirect('/profile');
+    res.status(500).json({ errors: errors.array() });
+    return;
   }
 
   const user = req.user as IUser;
   try {
     const fUser = await User.findById(user.id);
     if (!fUser) {
-      next();
+      res.status(404).json({ message: 'User not found' });
+      return;
     } else {
       fUser.password = req.body.password;
       const savedUser = await fUser.save();
-      req.flash('success', 'Password has been changed');
-      res.redirect('/profile');
+      res.status(200).json({
+        message: 'Password has been changed successfully',
+        user: {
+          id: savedUser.id,
+          username: savedUser.username,
+          email: savedUser.email
+        }
+      });
     }
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: 'An error occurred when attempt to change password' });
+    return;
   }
 };
 
 /**
-  * @Route GET /forgot
+  * @Route POST /auth/forgot
 */
-export const getForgot = (req: Request, res: Response): void => {
-  if (req.isAuthenticated()) {
-    return res.redirect('/');
-  }
-
-  res.render('forgot', {
-    title: 'Forgot password',
-    success: req.flash('success'),
-    errors: req.flash('errors'),
-    csrfToken: res.locals._csrf
-  });
-}
-
-export const postForgot = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const postForgot = async (req: Request, res: Response, next: NextFunction) => {
   await body('email')
     .isEmail().withMessage('Please enter a valid email')
     .normalizeEmail({ gmail_remove_dots: false })
@@ -232,15 +184,15 @@ export const postForgot = async (req: Request, res: Response, next: NextFunction
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    req.flash("errors", errors.array().map(err => err.msg));
-    return res.redirect('/auth/forgot');
+    res.status(500).json({ errors: errors.array() });
+    return;
   }
   try {
     const token = crypto.randomBytes(16).toString('hex');
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
-      req.flash('errors', 'No account with the given email');
-      return res.redirect('/auth/forgot');
+      res.status(400).json({ message: 'No account with the give email' });
+      return;
     }
     user.passwordResetToken = token;
     user.passwordResetTokenExpires = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hour
@@ -263,47 +215,16 @@ export const postForgot = async (req: Request, res: Response, next: NextFunction
     http://${req.headers.host}/auth/reset/${token}\n\nIf you don't want to change your password, please ignore this email.`
     };
     const info = await transporter.sendMail(mailOptions);
-    console.log(info);
-    req.flash('success', `An email has been sent to ${user.email}.`);
-    return res.redirect('/auth/forgot');
+    res.status(200).json({ message: `An email has been sent to ${user.email}.` });
   } catch (err) {
-    console.log(err);
-    req.flash('errors', 'An error occurred');
-    return res.redirect('/auth/forgot');
-  }
-}
-
-/**
-  * @Route GET /reset/:token
-*/
-export const getReset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  if (req.isAuthenticated()) {
-    return res.redirect('/');
-  }
-  try {
-    const user = await User.findOne({ passwordResetToken: req.params.token })
-      .where('passwordResetTokenExpires').gt(Date.now());
-    if (!user) {
-      req.flash('errors', 'Password reset token is invalid or has been expired');
-      return res.redirect('/auth/forgot');
-    }
-    res.render('reset', {
-      title: 'Reset password',
-      success: req.flash('success'),
-      errors: req.flash('errors'),
-      csrfToken: res.locals._csrf,
-      resetToken: req.params.token
-    });
-  } catch (err) {
-    next(err);
-    return res.redirect('/auth/forgot');
+    res.status(500).json({ message: 'An error occurred' });
   }
 }
 
 /**
   * @Route POST /reset/:token
 */
-export const postReset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const postReset = async (req: Request, res: Response, next: NextFunction) => {
   await body('password')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
     .run(req);
@@ -313,15 +234,15 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash("errors", errors.array().map(err => err.msg));
-    return res.redirect('/profile');
+    res.status(500).json({ errors: errors.array() });
+    return;
   }
   try {
     const user = await User.findOne({ passwordResetToken: req.params.token })
       .where('passwordResetTokenExpires').gt(Date.now());
     if (!user) {
-      req.flash('errors', 'Password reset token is invalid or has been expired');
-      return res.redirect('/auth/forgot');
+      res.status(400).json({ message: 'Password reset token is invalid or has been expired' });
+      return;
     }
     user.password = req.body.password;
     user.passwordResetToken = null;
@@ -329,34 +250,52 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
     const savedUser = await user.save();
     req.logIn(savedUser, (loginErr) => {
       if (loginErr) {
-        req.flash('error', 'Could not login');
-        return res.redirect('/auth/login');
+        res.status(500).json({ message: 'Could not login' });
+        return;
       }
-      return res.redirect('/');
+      res.status(200).json({
+        message: 'Password has been changed successfully',
+        user: {
+          id: savedUser.id,
+          username: savedUser.username,
+          email: savedUser.email
+        }
+      });
     });
   } catch (err) {
-    next(err);
-    return res.redirect('/auth/forgot');
+    res.status(500).json({ message: 'An error occurred' });
   }
 }
 
 /**
-  * @Route GET /unlink/:provider
-*/
-export const getUnlink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const provider = req.params.provider;
-  const reqUser = req.user as IUser;
-  try {
-    const user = await User.findById(reqUser.id);
-    if (!user) {
-      req.flash('errors', `Can't unlink`);
-      return res.redirect('/');
-    }
-    // user.githubId = null;
-    user.tokens = user.tokens.filter((token: AuthToken) => token.kind !== provider);
-    await user.save();
-    req.flash('success', `${provider} account has been unlinked`);
-  } catch (err) {
-    next(err);
+ * @route   GET /auth/status
+ */
+export const getAuthStatus = (req: Request, res: Response): void => {
+  if (req.isAuthenticated()) {
+    const user = req.user as IUser;
+    res.status(200).json({
+      isAuthenticated: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      }
+    });
+  } else {
+    res.status(401).json({
+      isAuthenticated: false,
+      user: null
+    });
   }
+};
+
+/**
+  * @Route    GET /auth/csrftoken
+*/
+export const getCsrfToken = (req: Request, res: Response) => {
+  if (res.locals._csrf) {
+    res.status(200).json({ csrfToken: res.locals._csrf, });
+    return;
+  }
+  res.status(400).json({ message: 'No csrf token' });
 }

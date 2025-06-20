@@ -2,3 +2,6 @@ node_modules
 cache
 dbdata
 .env
+build_logs
+src/views/
+src/*/*.view.ts
