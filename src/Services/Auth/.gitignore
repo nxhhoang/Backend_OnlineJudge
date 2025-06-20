@@ -3,5 +3,5 @@ cache
 dbdata
 .env
 build_logs
-src/views/
+views/
 src/*/*.view.ts
