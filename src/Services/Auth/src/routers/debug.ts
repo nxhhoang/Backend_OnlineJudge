@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 
 const router = Router();
 
-router.get('/debug-session', (req: Request, res: Response) => {
+router.get('/api/v1/debug-session', (req: Request, res: Response) => {
   res.json({
     sessionID: req.sessionID,
     user: req.user,
@@ -15,7 +15,7 @@ router.get('/debug-session', (req: Request, res: Response) => {
   });
 });
 
-router.get('/debug-session/:id', async (req, res) => {
+router.get('/api/v1/debug-session/:id', async (req, res) => {
   const sessionId = req.params.id;
   let redisStore = new RedisStore({
     client: redisClient,

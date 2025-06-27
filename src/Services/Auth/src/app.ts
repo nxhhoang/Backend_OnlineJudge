@@ -43,9 +43,9 @@ export default () => {
   app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'tiny'));
   app.use(
     session({
-      genid: (_) => {
-        return uuid();
-      },
+      // genid: (_) => {
+      //   return uuid();
+      // }, // change to default id generation
       secret: process.env.AUTH_SECRET || 'secret',
       resave: false,
       saveUninitialized: false,
@@ -71,8 +71,8 @@ export default () => {
     referrerPolicy: 'same-origin'
   }));
 
-  app.use('/debug', debugRoutes);
-  app.use('/auth', authRoutes);
+  app.use('/api/v1/debug', debugRoutes);
+  app.use('/api/v1/auth', authRoutes);
   app.use('/view/auth', authViewRoutes);
   return app;
 }
