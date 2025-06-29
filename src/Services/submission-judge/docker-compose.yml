@@ -1,0 +1,25 @@
+services:
+  submission-judge:
+    container_name: submission-judge-app
+    build: .
+    env_file:
+      - ./.env
+    ports:
+      - "8080:8080"
+    depends_on: 
+      - mongo 
+    volumes:
+      - .:/app
+  mongo: 
+    container_name: submission-judge-db
+    image: mongo
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: submissionjudgedb 
+    command: mongod --port 37017
+    ports:
+      - '37017:37017'
+    volumes:
+      - ./submission-judge-db-data:/data/db
