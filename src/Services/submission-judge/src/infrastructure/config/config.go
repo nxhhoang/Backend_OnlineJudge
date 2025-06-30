@@ -1,17 +1,16 @@
 package config
 
 import (
-	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
 	Database struct {
-		Port   string
-		DBName string
-		Host   string
+		Uri string
 	}
-
+	LogLevel   string
 	Enviroment string
 }
 
@@ -19,11 +18,9 @@ func Load() (*Config, error) {
 	godotenv.Load("../../../.env")
 
 	cfg := &Config{}
-
-	cfg.Database.Port = getEnv("MONGODB_PORT", "37017")
-	cfg.Database.DBName = getEnv("MONGODB_DBNAME", "submissionjudgedb")
-	cfg.Database.Host = getEnv("MONGODB_HOST", "mongo")
-
+	cfg.Database.Uri = getEnv("MONGODB_URI", "mongodb://mongo:37017/submissionjudgedb")
+	cfg.Enviroment = getEnv("ENV", "Development")
+	cfg.LogLevel = getEnv("LOG_LEVEL", "debug")
 	return cfg, nil
 }
 
