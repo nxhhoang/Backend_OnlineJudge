@@ -2,13 +2,12 @@ package main
 
 import (
 	// "context"
-	"fmt"
+
 	// "judge/routes"
 	// "judge/storage"
-	"judge/utils"
+
 	"log"
 	"os"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -32,16 +31,16 @@ func main() {
 		panic("POLYGON_API_KEY not set")
 	}
 
-	err = utils.DownloadPackage(map[string]string{
-		"problemId": "442306",
-		"packageId": "1145478",
-		"type":      "standard",
-		"apiKey":    os.Getenv("POLYGON_API_KEY"),
-		"time":      fmt.Sprintf("%d", time.Now().Unix()),
-	})
-	if err != nil {
-		panic(err.Error())
-	}
+	// err = utils.DownloadPackage(map[string]string{
+	// 	"problemId": "442306",
+	// 	"packageId": "1145478",
+	// 	"type":      "standard",
+	// 	"apiKey":    os.Getenv("POLYGON_API_KEY"),
+	// 	"time":      fmt.Sprintf("%d", time.Now().Unix()),
+	// })
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
 
 	// client, err := storage.GetMongoDbClient()
 	// if err != nil {
