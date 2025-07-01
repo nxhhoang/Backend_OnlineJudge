@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    container_name: judge
+    ports:
+      - '3100:3100'
+    volumes:
+      - '.:/app'
+    depends_on:
+      - mongo
+    env_file:
+      - ./.env
+  mongo:
+    image: mongo
+    container_name: judge-mongo
+    command: mongod --port 27117
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: judgedb
+    ports:
+      - '27117:27117'
+    volumes:
+      - ./judgedb:/data/db
