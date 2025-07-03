@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	// "fmt"
-
+	"github.com/bibimoni/Online-judge/submission-judge/src/components"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/database"
+	"github.com/bibimoni/Online-judge/submission-judge/src/router"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -20,4 +22,14 @@ func main() {
 		log.Fatal().Err(err).Msgf("Can't not load mongoDB")
 	}
 	defer client.Disconnect(context.Background())
+
+	appCtx := appctx.NewAppContext(client)
+
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(gin.Logger())
+
+	v1 := r.Group("/api/v1")
+
+	router.RegisterRouter(v1, appCtx)
 }
