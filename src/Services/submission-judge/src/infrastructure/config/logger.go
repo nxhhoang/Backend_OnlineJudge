@@ -8,6 +8,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var log *zerolog.Logger
+
+func GetLogger() *zerolog.Logger {
+	return log
+}
+
 func NewLogger(level string) *zerolog.Logger {
 	var logLevel zerolog.Level
 	if level == "info" {
@@ -36,5 +42,6 @@ func NewLogger(level string) *zerolog.Logger {
 		Timestamp().
 		Logger()
 
+	log = &logger
 	return &logger
 }

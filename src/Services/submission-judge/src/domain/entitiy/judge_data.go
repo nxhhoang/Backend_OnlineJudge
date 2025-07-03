@@ -8,10 +8,10 @@ type JudgeData struct {
 	Format    JudgeDataFormat `json:"format,omitempty" bson:"format"`
 }
 
-type JudgeDataFormat int
+type JudgeDataFormat string
 
 const (
-	ICPC JudgeDataFormat = iota
-	IOI
-	IOI_BATCH
+	ICPC      JudgeDataFormat = "ICPC"
+	IOI       JudgeDataFormat = "IOI"
+	IOI_BATCH JudgeDataFormat = "IOI_BATCH"
 )

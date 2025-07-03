@@ -8,6 +8,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/database"
 	"github.com/bibimoni/Online-judge/submission-judge/src/router"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 	}
 	defer client.Disconnect(context.Background())
 
-	appCtx := appctx.NewAppContext(client)
+	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name))
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -32,4 +33,19 @@ func main() {
 	v1 := r.Group("/api/v1")
 
 	router.RegisterRouter(v1, appCtx)
+
+	serverAddr := cfg.Server.Host + ":" + cfg.Server.Port
+
+	log.Info().Msgf("Submission-Judge server is listening on: %s", serverAddr)
+
+	srv := &http.Server{
+		Addr:         serverAddr,
+		Handler:      r,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatal().Err(err).Msgf("Failed to start Submission-Judge server: %s", err)
+	}
 }

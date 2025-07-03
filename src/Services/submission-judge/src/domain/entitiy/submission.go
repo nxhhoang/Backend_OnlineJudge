@@ -13,9 +13,9 @@ type Submission struct {
 	Type         SubmissionType `json:"type,omitempty" bson:"type"`
 }
 
-type SubmissionType int
+type SubmissionType string
 
 const (
-	CUSTOM SubmissionType = iota
-	ACTUAL
+	CUSTOM SubmissionType = "CUSTOM"
+	ACTUAL SubmissionType = "ACTUAL"
 )

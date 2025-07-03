@@ -1,11 +1,12 @@
 package router
 
 import (
-	"github.com/bibimoni/Online-judge/submission-judge/src/components"
+	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
+	"github.com/bibimoni/Online-judge/submission-judge/src/transport"
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRouter(gin *gin.RouterGroup, appCtx appctx.AppContext) {
-	submission := gin.Group("/submission")
-
+func RegisterRouter(group *gin.RouterGroup, appContext appctx.AppContext) {
+	submission := group.Group("/submission")
+	submission.POST("/submit", transport.HandleSubmitSubmissionRequest(appContext))
 }

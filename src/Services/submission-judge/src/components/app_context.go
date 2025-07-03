@@ -3,17 +3,17 @@ package appctx
 import "go.mongodb.org/mongo-driver/v2/mongo"
 
 type AppContext interface {
-	GetMainDbConnection() *mongo.Client
+	GetMainDbConnection() *mongo.Database
 }
 
 type appCtx struct {
-	client *mongo.Client
+	database *mongo.Database
 }
 
-func NewAppContext(client *mongo.Client) *appCtx {
-	return &appCtx{client}
+func NewAppContext(database *mongo.Database) *appCtx {
+	return &appCtx{database}
 }
 
-func (ctx *appCtx) GetMainDbConnection() *mongo.Client {
-	return ctx.client
+func (ctx *appCtx) GetMainDbConnection() *mongo.Database {
+	return ctx.database
 }
