@@ -1,38 +1,37 @@
 package models
 
 type Problem struct {
-	Code       string
-	Name       string
-	Statement  string
-	Tags       []string
+	Name      string
+	ShortName string
+	url       string
+
+	Generators []executable
 	Validators []Validator
 	Checker    Checker
 	Solutions  []Solutions
 }
 
-type Executable struct {
+type executable struct {
 	Source     string
 	SourceType string
 	Binary     string
-	// In Polygon package, binaries have type properties (win32,...) but in our system,
+	// In Polygon package, binaries have type properties (exe.win32,...) but in our system,
 	// We would decide it ourselves
-	Testset Testset
 }
 
 type Validator struct {
-	Executable
+	executable
+	tests Testset
 }
 
 type Checker struct {
-	Executable
+	executable
+	tests Testset
 }
 
 type Solutions struct {
 	Tags string
-	Executable
-}
-
-type Judging struct {
+	executable
 }
 
 type Testset struct {
@@ -45,5 +44,16 @@ type Testset struct {
 }
 
 type Test struct {
-	Comment string
+	Cmd        string
+	InputName  string
+	OutputName string
+	Point      float64
+	Group      string
+}
+
+type Group struct {
+	FeedbackPolict string
+	Name           string
+	PointsPolicy   string
+	Points         float64
 }
