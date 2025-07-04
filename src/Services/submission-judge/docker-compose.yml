@@ -1,7 +1,9 @@
 services:
   submission-judge:
     container_name: submission-judge-app
-    build: .
+    build: 
+      context: .
+      target: dev #prod 
     env_file:
       - ./.env
     ports:

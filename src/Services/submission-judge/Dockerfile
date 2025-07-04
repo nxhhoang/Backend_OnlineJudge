@@ -1,14 +1,26 @@
-FROM golang:1.24.4 AS builder
+FROM golang:1.24.4 AS base
 
 WORKDIR /app
 
-COPY . .
+COPY go.mod go.sum .
+RUN go mod download
 
+COPY . .
 RUN go mod tidy
+
+# dev build
+FROM base AS dev
+RUN go install github.com/air-verse/air@latest
+EXPOSE 8000
+CMD ["air", "-c", ".air.toml"]
+
+# prod build 
+FROM base AS builder
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./src/cmd/main.go
 
-FROM alpine:latest
+# prod runtime
+FROM alpine:latest AS prod
 WORKDIR /root/
 
 COPY --from=builder /app/main .
@@ -17,4 +29,4 @@ RUN chmod +x main
 
 EXPOSE 8000
 
-CMD ["./main"]
+ENTRYPOINT ["./main"]
