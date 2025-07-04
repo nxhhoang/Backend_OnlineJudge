@@ -1,0 +1,38 @@
+services:
+  auth-app:
+    build: ./src/Services/Auth
+    container_name: auth-app
+    ports:
+      - '3000:3000'
+    expose:
+      - '3001'
+    volumes:
+      - './src/Services/Auth:/usr/src/app'
+      - /usr/src/app/node_modules
+    depends_on:
+      - mongoauth
+      - cacheauth
+    env_file:
+      - src/Services/Auth/.env
+  mongoauth:
+    image: mongo
+    container_name: auth-mongo-1
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: userdb
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./src/Services/Auth/dbdata:/data/db
+  cacheauth:
+    image: redis
+    container_name: auth-cache-1
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass root
+    volumes:
+      - ./src/Services/Auth/cache:/data
+  
