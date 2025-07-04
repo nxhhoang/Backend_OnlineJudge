@@ -1,3 +1,4 @@
 submission-judge-db-data/
 .env
 main
+bin/
