@@ -33,8 +33,8 @@ func Load() (*Config, error) {
 
 	cfg.LogLevel = getEnv("LOG_LEVEL", "debug")
 
-	cfg.Server.Port = getEnv("PORT", "8080")
-	cfg.Server.Host = getEnv("HOST", "http://localhost")
+	cfg.Server.Port = getEnv("PORT", "8000")
+	cfg.Server.Host = getEnv("HOST", "0.0.0.0")
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.WriteTimeout = time.Second * 15
 
