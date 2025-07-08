@@ -11,7 +11,7 @@ type Pair[K comparable, V any] struct {
 }
 
 // GetSortedKeys gets sorted list of keys
-func GetSortedKeys[K comparable, V any](m *map[K]V, less func (a, b K) bool) ([]K) {
+func GetSortedKeys[K comparable, V any](m *map[K]V, less func(a, b K) bool) []K {
 	keys := make([]K, 0)
 	for k := range *m {
 		keys = append(keys, k)
@@ -23,4 +23,3 @@ func GetSortedKeys[K comparable, V any](m *map[K]V, less func (a, b K) bool) ([]
 
 	return keys
 }
-

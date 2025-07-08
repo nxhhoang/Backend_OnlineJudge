@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"judge/commons"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
-
-	"github.com/xyproto/unzip"
 )
 
 /*
@@ -22,16 +22,34 @@ DownloadPackge() - Download Polygon problems
 FUTURE:
 - Automatically get the latest packageId
 */
-func DownloadPackage(params map[string]string) error {
-	dirpath := fmt.Sprintf("/problems/%s/%s", params["problemId"], params["packageId"])
-	if err := os.Mkdir(dirpath, 0755); os.IsExist(err) {
-		return errors.New("the problem already existed")
+func DownloadPackage(problemId uint64, packageId uint64) error {
+	if os.Getenv("STORAGE_DIR") == "" {
+		panic(commons.STORAGE_DIR_NOT_SET)
 	}
 
 	apiSecret := os.Getenv("POLYGON_API_SECRET")
 	if apiSecret == "" {
-		return errors.New("POLYGON_API_SECRET not set")
+		panic(commons.POLYGON_API_SECRET_NOT_SET)
 	}
+
+	if os.Getenv("POLYGON_API_KEY") == "" {
+		panic(commons.POLYGON_API_NOT_SET)
+	}
+
+	params := map[string]string{
+		"problemId": strconv.Itoa(int(problemId)),
+		"packageId": strconv.Itoa(int(packageId)),
+		"type":      "standard",
+		"apiKey":    os.Getenv("POLYGON_API_KEY"),
+		"time":      fmt.Sprintf("%d", time.Now().Unix()),
+	}
+
+	dirpath := fmt.Sprintf("%s/%s/%s", os.Getenv("STORAGE_DIR"), params["problemId"], params["packageId"])
+	if err := os.Mkdir(dirpath, 0755); os.IsExist(err) {
+		return errors.New("the problem already existed")
+	}
+
+	apiSig := ""
 
 	// get 6 random bytes
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -40,7 +58,7 @@ func DownloadPackage(params map[string]string) error {
 	for i := range 6 {
 		rand_header[i] = charset[rand.Intn(len(charset))]
 	}
-	apiSig := fmt.Sprintf("%s/problem.package?", rand_header)
+	apiSig += fmt.Sprintf("%s/problem.package?", rand_header)
 
 	keys := GetSortedKeys(&params, func(a, b string) bool { return a < b })
 	for k, v := range keys {
@@ -100,10 +118,10 @@ func DownloadPackage(params map[string]string) error {
 	}
 
 	// TODO: save it to dir path
-	err = unzip.Extract(f.Name(), dirpath)
-	if err != nil {
-		return err
-	}
+	// err = unzip.Extract(f.Name(), dirpath)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
