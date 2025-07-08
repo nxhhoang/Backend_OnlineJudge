@@ -12,6 +12,8 @@ services:
       - mongosubmissionjudge 
     volumes:
       - ./src/Services/submission-judge:/app
+    networks:
+      - online-judge-network
   mongosubmissionjudge: 
     container_name: submission-judge-db
     image: mongo
@@ -24,3 +26,22 @@ services:
       - '37017:27017'
     volumes:
       - ./src/Services/submission-judge/submission-judge-db-data:/data/db
+    networks:
+      - online-judge-network
+  gateway:
+    container_name: gateway-app 
+    build:
+      context: ./src/Services/gateway/
+      target: prod
+    env_file:
+      - src/Services/gateway/.env
+    ports:
+      - "80:80"
+    volumes:
+      - ./src/Services/gateway:/app
+    networks:
+      - online-judge-network
+
+networks:
+  online-judge-network:
+    driver: bridge
