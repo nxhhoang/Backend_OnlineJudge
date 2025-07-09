@@ -1,0 +1,53 @@
+package main
+
+import (
+	// "context"
+
+	// "judge/routes"
+	// "judge/storage"
+
+	"context"
+	"fmt"
+	"judge/routes"
+	"judge/storage"
+	"log"
+	"os"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/joho/godotenv"
+)
+
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	app := fiber.New(fiber.Config{
+		ServerHeader: "HCMUT-OJ",
+	})
+	app.Use(logger.New(logger.Config{
+		Output: os.Stdout,
+	}))
+
+	client, err := storage.GetMongoDbClient()
+	if err != nil {
+		log.Fatal("Error: ", err)
+	}
+	defer client.Disconnect(context.Background())
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("I'm a GET request!")
+	})
+
+	routes.ProblemRoute(app.Group("/problem"))
+
+	for _, route := range app.Stack() {
+		for _, r := range route {
+			fmt.Printf("%-6s %s\n", r.Method, r.Path)
+		}
+	}
+
+	app.Listen(":3000")
+}

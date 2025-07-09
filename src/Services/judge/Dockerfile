@@ -6,4 +6,4 @@ COPY . .
 RUN go mod tidy
 
 # RUN air init
-CMD ["go", "run", "main.go"]
+CMD ["go", "run", "cmd/main.go"]
