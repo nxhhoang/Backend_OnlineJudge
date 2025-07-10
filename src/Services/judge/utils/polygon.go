@@ -6,52 +6,47 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"judge/commons"
+	"judge/models"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/xyproto/unzip"
 )
 
 /*
 DownloadPackge() - Download Polygon problems
-- Problems are stored at /upload/problems/$problemId/$packageId
+- Problems are stored at $STORAGE_DIR/$problemId/ with structure followed the README.md
+- It removes all downloaded packages of the given problem before downloading the specified package
 
 FUTURE:
-- Automatically get the latest packageId
 */
 func DownloadPackage(problemId uint64, packageId uint64) error {
-	if os.Getenv("STORAGE_DIR") == "" {
-		panic(commons.STORAGE_DIR_NOT_SET)
-	}
-
 	apiSecret := os.Getenv("POLYGON_API_SECRET")
-	if apiSecret == "" {
-		panic(commons.POLYGON_API_SECRET_NOT_SET)
-	}
-
-	if os.Getenv("POLYGON_API_KEY") == "" {
-		panic(commons.POLYGON_API_NOT_SET)
-	}
-
 	params := map[string]string{
 		"problemId": strconv.Itoa(int(problemId)),
 		"packageId": strconv.Itoa(int(packageId)),
-		"type":      "standard",
+		"type":      "linux",
 		"apiKey":    os.Getenv("POLYGON_API_KEY"),
 		"time":      fmt.Sprintf("%d", time.Now().Unix()),
 	}
 
-	dirpath := fmt.Sprintf("%s/%s/%s", os.Getenv("STORAGE_DIR"), params["problemId"], params["packageId"])
-	if err := os.Mkdir(dirpath, 0755); os.IsExist(err) {
-		return errors.New("the problem already existed")
+	dirpath := fmt.Sprintf("%s/%s", os.Getenv("STORAGE_DIR"), params["problemId"])
+	if err := os.RemoveAll(dirpath); err != nil {
+		return err
+	}
+	if err := os.Mkdir(dirpath, os.ModePerm); err != nil {
+		return nil
 	}
 
 	apiSig := ""
 
-	// get 6 random bytes
+	// Create apiSig
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
 	rand_header := make([]byte, 6)
@@ -75,10 +70,6 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 
 	apiSig = string(rand_header) + apiSig
 
-	// fmt.Printf("apiSig: %s\n", apiSig)
-
-	// Build address
-
 	address := "https://polygon.codeforces.com/api/problem.package?"
 	requestParams := url.Values{}
 	requestParams.Add("problemId", params["problemId"])
@@ -89,7 +80,6 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 	requestParams.Add("apiSig", apiSig)
 
 	address += requestParams.Encode()
-	fmt.Printf("address: %s\n", address)
 
 	// make requests
 	resp, err := http.Get(address)
@@ -106,22 +96,92 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return errors.New(string(body))
 	}
 
+	// Extract to a temporary directory
 	f, err := os.CreateTemp("", "*.zip")
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	_, err = f.Write(body)
-	if err != nil {
+	if _, err = f.Write(body); err != nil {
 		return err
 	}
 
-	// TODO: save it to dir path
-	// err = unzip.Extract(f.Name(), dirpath)
-	// if err != nil {
-	// 	return err
-	// }
+	tempdir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tempdir)
+
+	if err = unzip.Extract(f.Name(), tempdir); err != nil {
+		return err
+	}
+
+	var xml *os.File
+	if xml, err = os.Open(tempdir + "/problem.xml"); err != nil {
+		return err
+	}
+	var problem models.Problem
+	if problem, err = ParseProblemStruct(xml); err != nil {
+		return err
+	}
+
+	if err := SaveProblemToJson(problem, dirpath+"/problem.xml"); err != nil {
+		return err
+	}
+
+	if err := os.Mkdir(dirpath+"/tests", os.ModePerm); err != nil {
+		return err
+	}
+	if err := os.Mkdir(dirpath+"/tests/input", os.ModePerm); err != nil {
+		return err
+	}
+	if err := os.Mkdir(dirpath+"/tests/output", os.ModePerm); err != nil {
+		return err
+	}
+
+	r, err := regexp.Compile(`\.a$`)
+	if err != nil {
+		return nil
+	}
+
+	err = filepath.Walk(tempdir+"/tests/", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		sourceFile, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer sourceFile.Close()
+
+		var destFile io.Writer
+
+		if !r.Match([]byte(info.Name())) {
+			destFile, err = os.Create(dirpath + "/tests/input/" + info.Name())
+		} else {
+			destFile, err = os.Create(dirpath + "/tests/output/" + info.Name()[:len(info.Name())-2]) // remove the .a extension
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if _, err := io.Copy(destFile, sourceFile); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
