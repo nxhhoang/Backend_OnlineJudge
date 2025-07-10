@@ -4,10 +4,10 @@ services:
     container_name: problem
     ports:
       - '3000:3000'
-    volumes:
-      - '.:/app'
     depends_on:
       - mongo
+    environment:
+      - STORAGE_DIR=/storage
     env_file:
       - ./.env
   mongo:

@@ -6,7 +6,6 @@ import (
 	// "judge/routes"
 	// "judge/storage"
 
-	"context"
 	"fmt"
 	"judge/routes"
 	"judge/storage"
@@ -31,11 +30,9 @@ func main() {
 		Output: os.Stdout,
 	}))
 
-	client, err := storage.GetMongoDbClient()
-	if err != nil {
-		log.Fatal("Error: ", err)
+	if err := storage.GetMongoDbClient(); err != nil {
+		panic(err)
 	}
-	defer client.Disconnect(context.Background())
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("I'm a GET request!")
