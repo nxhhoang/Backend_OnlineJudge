@@ -126,7 +126,7 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return err
 	}
 
-	if err := SaveProblemToJson(problem, dirpath+"/problem.xml"); err != nil {
+	if err := SaveProblemToJson(problem, dirpath+"/problem.json"); err != nil {
 		return err
 	}
 
