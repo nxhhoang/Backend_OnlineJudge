@@ -1,12 +1,9 @@
 package utils_test
 
 import (
-	"fmt"
 	"judge/utils"
 	"log"
-	"os"
 	"testing"
-	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -17,13 +14,7 @@ func TestSuccessfulDownload(t *testing.T) {
 		log.Println("No .env file found or failed to load")
 	}
 
-	result := utils.DownloadPackage(map[string]string{
-		"problemId": "442306",
-		"packageId": "1145478",
-		"type":      "standard",
-		"apiKey":    os.Getenv("POLYGON_API_KEY"),
-		"time":      fmt.Sprintf("%d", time.Now().Unix()),
-	})
+	result := utils.DownloadPackage(332909, 1154548)
 	var expected error = nil
 
 	if result != expected {
