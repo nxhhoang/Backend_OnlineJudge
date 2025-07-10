@@ -10,10 +10,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetMongoDbClient() (*mongo.Client, error) {
+var (
+	ctx context.Context
+	db  *mongo.Client
+)
+
+func GetMongoDbClient() error {
 	dbAddress := os.Getenv("MONGO_URI")
 	if dbAddress == "" {
-		return nil, fmt.Errorf("MONGO_URI not set")
+		return fmt.Errorf("MONGO_URI not set")
 	}
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	clientOptions := options.Client().ApplyURI(dbAddress).SetServerAPIOptions(serverAPI)
@@ -23,15 +28,22 @@ func GetMongoDbClient() (*mongo.Client, error) {
 
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+		return fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
 
 	pingCtx, pingCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer pingCancel()
 
 	if err = client.Ping(pingCtx, nil); err != nil {
-		return nil, fmt.Errorf("could not ping MongoDB: %w", err)
+		return fmt.Errorf("could not ping MongoDB: %w", err)
 	}
 
-	return client, nil
+	db = client
+	ctx = ctx
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
