@@ -1,7 +1,10 @@
 package models
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type Problem struct {
-	Name      string   `json:"name"`
-	ShortName string   `json:"short-name"`
-	Tags      []string `json:"tags"`
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Name      string             `json:"name",bson:"name"`
+	ShortName string             `json:"short-name",bson:"short-name"`
+	Tags      []string           `json:"tags",bson:"tags"`
 }
