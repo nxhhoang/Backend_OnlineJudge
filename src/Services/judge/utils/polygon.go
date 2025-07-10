@@ -122,7 +122,7 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return err
 	}
 	var problem models.Problem
-	if problem, err = ParseProblemStruct(xml); err != nil {
+	if problem, err = ParseProblemStruct(problemId, xml); err != nil {
 		return err
 	}
 

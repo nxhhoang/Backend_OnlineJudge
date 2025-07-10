@@ -14,7 +14,7 @@ func TestParseProblem(t *testing.T) {
 	}
 	defer f.Close()
 
-	problem, err := utils.ParseProblemStruct(f)
+	problem, err := utils.ParseProblemStruct(123, f)
 	if err != nil {
 		t.Error(err)
 	}

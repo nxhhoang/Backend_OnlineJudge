@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <problem revision="13" short-name="sum-of-or" url="https://polygon.codeforces.com/p22RgnC/chungdinh/sum-of-or">
     <names>
-        <name language="vietnamese" value="Tổng OR"/>
+        <name language="english" value="Tổng OR"/>
     </names>
     <statements>
         <statement charset="UTF-8" language="english" mathjax="true" path="statements/english/problem.tex" type="application/x-tex"/>

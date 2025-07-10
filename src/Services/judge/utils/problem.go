@@ -17,7 +17,7 @@ Current problems
 Workflow:
 - Read problem.xml to get Name, ShortName, Tags and create a Problem
 */
-func ParseProblemStruct(xml *os.File) (models.Problem, error) {
+func ParseProblemStruct(problemId uint64, xml *os.File) (models.Problem, error) {
 	var problem models.Problem
 
 	doc, err := xmlquery.Parse(xml)
@@ -25,6 +25,7 @@ func ParseProblemStruct(xml *os.File) (models.Problem, error) {
 		return problem, err
 	}
 
+	problem.ProblemId = problemId
 	problem.Name = xmlquery.Find(doc, "//problem/names/name[@language='english']/@value")[0].InnerText()
 	problem.ShortName = xmlquery.Find(doc, "//problem/@short-name")[0].InnerText()
 	tags := xmlquery.Find(doc, "//problem/tags/tag")
