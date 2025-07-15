@@ -28,4 +28,6 @@ func ProblemRoute(router fiber.Router) {
 
 		return c.SendStatus(200)
 	})
+
+	router.Static("/get/", "/storage")
 }
