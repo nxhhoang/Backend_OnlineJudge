@@ -1,40 +1,35 @@
-```mermaid
---- 
-title: Problem
----
-classDiagram 
-  class Problem{
-    +string Name
-    +string ShortName
-    +[]String Tags
-  }
-```
-
-## Problem directory structure
-```
-+-- problem.json // simple version with only needed properties
-+-- statement.pdf
-+-- checker
-+-- tests/
-|   +-- input/
-|   +-- output/
-```
 
 ## API Schema
+- POST /problem/add?problemId=...&?packageId=...
+- GET /problem/get/${problemId}/ 
 
-### POST /problem/add
-
-### GET /problem/get?ProblemId
-Return 
-
+#### Problem directory structure
+```
++-- problem.json // simple version with only needed properties
++-- statement.pdf // haven't implemented yet
++-- checker // haven't implemented yet
++-- tests/
+|   +-- input/
+|   |   +-- 01
+|   |   +-- 02
+|   |   +-- ...
+|   +-- output/
+|   |   +-- 01
+|   |   +-- 02
+|   |   +-- ...
+```
+#### Sampe of a problem.json
 ```json
 {
-  "problem-id": "...",
-  "name": "...",
-  "short-name": "...",
+  "ID": "...",
+  "problem-id": 327480,
+  "name": "Chơi đùa cùng bộ bài",
+  "short-name": "playful-card-game",
   "tags": [
-    "...",
-    "..."
-  ]
+    "dp"
+  ],
+  "test-num": 103,
+  "time-limit": 1000,
+  "memory-limit": 268435456
 }
 ```
