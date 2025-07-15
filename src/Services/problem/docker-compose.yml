@@ -1,0 +1,22 @@
+services:
+  problem:
+    build: .
+    container_name: problem
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongo
+    env_file:
+      - ./.env
+  mongo:
+    image: mongo
+    container_name: problem-mongo
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: problem-db
+    ports:
+      - '27017:27017'
+    volumes:
+      - /home/db/problem-db:/data/db

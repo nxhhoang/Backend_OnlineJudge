@@ -1,4 +1,4 @@
-module judge
+module problem
 
 go 1.24.4
 
@@ -6,6 +6,7 @@ require (
 	github.com/antchfx/xmlquery v1.4.4
 	github.com/gofiber/fiber/v2 v2.52.8
 	github.com/joho/godotenv v1.5.1
+	github.com/xyproto/unzip v1.0.0
 	go.mongodb.org/mongo-driver v1.17.4
 )
 
@@ -20,8 +21,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/otiai10/copy v1.14.1 // indirect
-	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
@@ -29,7 +28,6 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
-	github.com/xyproto/unzip v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
