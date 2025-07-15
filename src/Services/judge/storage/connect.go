@@ -23,7 +23,8 @@ func GetMongoDbClient() error {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	clientOptions := options.Client().ApplyURI(dbAddress).SetServerAPIOptions(serverAPI)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, clientOptions)
@@ -39,11 +40,6 @@ func GetMongoDbClient() error {
 	}
 
 	db = client
-	ctx = ctx
-
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
