@@ -2,8 +2,8 @@ package utils_test
 
 import (
 	"fmt"
-	"problem/utils"
 	"os"
+	"problem/utils"
 	"testing"
 )
 
