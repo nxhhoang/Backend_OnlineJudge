@@ -23,18 +23,17 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	godotenv.Load("../../../.env")
-
+	godotenv.Load()
 	cfg := &Config{}
 
-	cfg.Database.Uri = getEnv("MONGODB_URI", "mongodb://mongo:37017/submissionjudgedb")
-	cfg.Database.Name = getEnv("MONGODB_DATABASE_NAME", "submissionjudgedb")
-	cfg.Enviroment = getEnv("ENV", "Development")
+	cfg.Database.Uri = getEnv("SUBMISSION_MONGODB_URI", "mongodb://mongosubmissiondb:37017/submissionjudgedb")
+	cfg.Database.Name = getEnv("SUBMISSION_MONGODB_DATABASE_NAME", "submissionjudgedb")
+	cfg.Enviroment = getEnv("SUBMISSION_ENV", "Development")
 
-	cfg.LogLevel = getEnv("LOG_LEVEL", "debug")
+	cfg.LogLevel = getEnv("SUBMISSION_LOG_LEVEL", "debug")
 
-	cfg.Server.Port = getEnv("PORT", "8000")
-	cfg.Server.Host = getEnv("HOST", "0.0.0.0")
+	cfg.Server.Port = getEnv("SUBMISSION_PORT", "8000")
+	cfg.Server.Host = getEnv("SUBMISSION_HOST", "0.0.0.0")
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.WriteTimeout = time.Second * 15
 

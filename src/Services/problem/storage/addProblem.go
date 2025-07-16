@@ -24,7 +24,7 @@ func AddProblem(ProblemId uint64, PackageId uint64) error {
 		return nil
 	}
 
-	file, err := os.Open(fmt.Sprintf("%s/%d/problem.json", os.Getenv("STORAGE_DIR"), ProblemId))
+	file, err := os.Open(fmt.Sprintf("%s/%d/problem.json", os.Getenv("PROBLEM_STORAGE_DIR"), ProblemId))
 	if err != nil {
 		return err
 	}

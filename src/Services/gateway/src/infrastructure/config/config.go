@@ -24,23 +24,22 @@ type Config struct {
 var cfg *Config = nil
 
 func Load() *Config {
-	godotenv.Load("../../../.env")
-
+	godotenv.Load()
 	if cfg != nil {
 		return cfg
 	}
 	cfg = &Config{}
 
-	cfg.Enviroment = getEnv("ENV", "Development")
+	cfg.Enviroment = getEnv("GATEWAY_ENV", "Development")
 
-	cfg.LogLevel = getEnv("LOG_LEVEL", "debug")
+	cfg.LogLevel = getEnv("GATEWAY_LOG_LEVEL", "debug")
 
-	cfg.Server.Port = getEnv("PORT", "80")
-	cfg.Server.Host = getEnv("HOST", "0.0.0.0")
+	cfg.Server.Port = getEnv("GATEWAY_PORT", "80")
+	cfg.Server.Host = getEnv("GATEWAY_HOST", "0.0.0.0")
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.WriteTimeout = time.Second * 15
 
-	cfg.Endpoints.Submission = getEnv("SUBMISSION_ENDPOINT", "")
+	cfg.Endpoints.Submission = getEnv("GATEWAY_SUBMISSION_ENDPOINT", "")
 	return cfg
 }
 

@@ -10,7 +10,7 @@ RUN go mod tidy
 
 # dev build
 FROM base AS dev
-COPY .env .
+# COPY .env .
 RUN go install github.com/air-verse/air@latest
 EXPOSE 8000
 CMD ["air", "-c", ".air.toml"]
@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./src/cmd/main.go
 FROM alpine:latest AS prod
 WORKDIR /root/
 
-COPY .env .
+# COPY .env .
 COPY --from=builder /app/main .
 
 RUN chmod +x main

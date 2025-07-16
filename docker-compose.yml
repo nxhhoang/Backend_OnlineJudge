@@ -5,16 +5,17 @@ services:
       context: ./src/Services/submission-judge/ 
       target: dev #prod 
     env_file:
-      - src/Services/submission-judge/.env
+      # - src/Services/submission-judge/.env
+      - ./.env
     ports:
       - "8000:8000"
     depends_on: 
-      - mongosubmissionjudge 
+      - mongosubmissionjudgedb
     volumes:
       - ./src/Services/submission-judge:/app
     networks:
       - online-judge-network
-  mongosubmissionjudge: 
+  mongosubmissionjudgedb: 
     container_name: submission-judge-db
     image: mongo
     restart: always
@@ -25,23 +26,48 @@ services:
     ports:
       - '37017:27017'
     volumes:
-      - ./src/Services/submission-judge/submission-judge-db-data:/data/db
+      - ./submission-judge-db-data:/data/db
     networks:
       - online-judge-network
   gateway:
     container_name: gateway-app 
     build:
       context: ./src/Services/gateway/
-      target: prod
+      target: dev #prod
     env_file:
-      - src/Services/gateway/.env
+      # - src/Services/gateway/.env
+      - ./.env
     ports:
       - "80:80"
     volumes:
       - ./src/Services/gateway:/app
     networks:
       - online-judge-network
-
+  problem:
+    build: .
+    container_name: problem
+    ports:
+      - '3000:3000'
+    depends_on:
+      - problemmongodb 
+    env_file:
+      - ./.env
+    networks:
+      - online-judge-network
+  problemmongodb:
+    image: mongo
+    container_name: problem-mongo
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: problem-db
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./problem-db-data:/data/db
+    networks:
+      - online-judge-network
 networks:
   online-judge-network:
     driver: bridge
