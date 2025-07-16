@@ -19,4 +19,5 @@ type EvaluationResult struct {
 	Outputs         []string      `json:"outputs,omitempty" bson:"outputs"`
 	TimestampFinish int           `json:"timestamp_finish,omitempty" bson:"timestamp_finish"`
 	Points          int           `json:"points,omitempty" bson:"points"`
+	PointsCase      []int         `json:"points_case,omitempty"`
 }
