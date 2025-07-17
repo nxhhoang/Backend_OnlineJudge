@@ -41,5 +41,10 @@ func main() {
 		}
 	}
 
-	app.Listen(":3000")
+	port := os.Getenv("PROBLEM_PORT")
+	if port == "" {
+		log.Fatalln("Can't get port address")
+		return
+	}
+	app.Listen(port)
 }
