@@ -8,9 +8,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var log *zerolog.Logger
+var log *zerolog.Logger = nil
 
 func GetLogger() *zerolog.Logger {
+	if log == nil {
+		cfg := Load()
+		log = NewLogger(cfg.LogLevel)
+	}
 	return log
 }
 

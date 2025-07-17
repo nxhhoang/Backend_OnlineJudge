@@ -12,7 +12,11 @@ var log *zerolog.Logger = nil
 
 func GetLogger() *zerolog.Logger {
 	if log == nil {
-		return NewLogger("info")
+		cfg, err := Load()
+		if err != nil {
+			panic("Can't load config")
+		}
+		log = NewLogger(cfg.LogLevel)
 	}
 	return log
 }

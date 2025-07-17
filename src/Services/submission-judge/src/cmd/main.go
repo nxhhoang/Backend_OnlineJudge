@@ -13,11 +13,11 @@ import (
 
 func main() {
 	cfg, err := config.Load()
-	log := config.NewLogger(cfg.LogLevel)
-
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Can not load config")
+		// log.Fatal().Err(err).Msgf("Can not load config")
+		panic("Can't load config")
 	}
+	log := config.NewLogger(cfg.LogLevel)
 
 	client, err := database.GetMongoDbClient(cfg.Database.Uri)
 	if err != nil {

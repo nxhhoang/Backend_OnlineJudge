@@ -13,10 +13,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+	godotenv.Load()
 
 	app := fiber.New(fiber.Config{
 		ServerHeader: "HCMUT-OJ",
@@ -46,5 +43,15 @@ func main() {
 		log.Fatalln("Can't get port address")
 		return
 	}
-	app.Listen(port)
+
+	host := os.Getenv("PROBLEM_HOST")
+	if host == "" {
+		log.Fatalln("Can't get host address")
+		return
+	}
+
+	serverAddr := host + ":" + port
+
+	log.Printf("Problem server is listening on: %s", serverAddr)
+	app.Listen(serverAddr)
 }

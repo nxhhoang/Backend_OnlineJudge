@@ -36,6 +36,10 @@ func (s *Server) ListenAndServe() {
 	if err != nil {
 		panic(err)
 	}
+
+	log := config.GetLogger()
+	log.Info().Msgf("API gateway is listening on: %s", s.httpServer.Addr)
+
 	s.httpServer.Serve(l)
 }
 

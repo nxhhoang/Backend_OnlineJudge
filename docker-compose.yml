@@ -52,6 +52,8 @@ services:
       - problemmongodb 
     env_file:
       - ./.env
+    volumes:
+      - ./src/Services/problem:/app
     networks:
       - online-judge-network
   problemmongodb:
