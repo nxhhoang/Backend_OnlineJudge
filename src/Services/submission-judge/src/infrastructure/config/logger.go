@@ -52,3 +52,7 @@ func NewLogger(level string) *zerolog.Logger {
 	log = &logger
 	return &logger
 }
+
+func IsolateLogger() *zerolog.Logger {
+
+}

@@ -29,6 +29,7 @@ services:
       - ./submission-judge-db-data:/data/db
     networks:
       - online-judge-network
+    privileged: true
   gateway:
     container_name: gateway-app 
     build:

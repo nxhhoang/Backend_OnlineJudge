@@ -8,7 +8,7 @@ RUN go mod download
 COPY . .
 RUN go mod tidy
 
-# dev build
+# Dev build
 FROM base AS dev
 # COPY .env .
 RUN go install github.com/air-verse/air@latest
