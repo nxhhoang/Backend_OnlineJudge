@@ -19,12 +19,7 @@ func GetLogger() *zerolog.Logger {
 }
 
 func NewLogger(level string) *zerolog.Logger {
-	var logLevel zerolog.Level
-	if level == "info" {
-		logLevel = zerolog.InfoLevel
-	} else {
-		logLevel = zerolog.DebugLevel
-	}
+	logLevel := getLogLevel(level)
 	consoleWriter := zerolog.ConsoleWriter{
 		Out:        os.Stderr,
 		NoColor:    false,
@@ -48,4 +43,27 @@ func NewLogger(level string) *zerolog.Logger {
 
 	log = &logger
 	return &logger
+}
+
+func getLogLevel(level string) zerolog.Level {
+	var logLevel zerolog.Level
+	switch level {
+	case "info":
+		logLevel = zerolog.InfoLevel
+	case "debug":
+		logLevel = zerolog.DebugLevel
+	case "warn":
+		logLevel = zerolog.WarnLevel
+	case "fatal":
+		logLevel = zerolog.FatalLevel
+	case "panic":
+		logLevel = zerolog.PanicLevel
+	case "no_level":
+		logLevel = zerolog.NoLevel
+	case "trace":
+		logLevel = zerolog.TraceLevel
+	default:
+		logLevel = zerolog.Disabled
+	}
+	return logLevel
 }

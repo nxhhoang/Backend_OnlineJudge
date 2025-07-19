@@ -9,5 +9,5 @@ type Isolate struct {
 	BoxDir   string
 	MetaFile string
 	Logger   *zerolog.Logger
-	inited   bool
+	Inited   bool
 }

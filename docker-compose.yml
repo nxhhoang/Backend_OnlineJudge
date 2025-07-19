@@ -13,8 +13,10 @@ services:
       - mongosubmissionjudgedb
     volumes:
       - ./src/Services/submission-judge:/app
+      - ./storage:/problems_dir:ro
     networks:
       - online-judge-network
+    privileged: true
   mongosubmissionjudgedb: 
     container_name: submission-judge-db
     image: mongo
@@ -29,7 +31,6 @@ services:
       - ./submission-judge-db-data:/data/db
     networks:
       - online-judge-network
-    privileged: true
   gateway:
     container_name: gateway-app 
     build:
@@ -55,6 +56,7 @@ services:
       - ./.env
     volumes:
       - ./src/Services/problem:/app
+      - ./storage:/storage
     networks:
       - online-judge-network
   problemmongodb:
