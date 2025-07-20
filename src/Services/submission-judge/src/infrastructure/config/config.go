@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -12,6 +14,10 @@ type Config struct {
 		Uri  string
 		Name string
 	}
+	Redis struct {
+		Uri      string
+		Password string
+	}
 	LogLevel        string
 	SandboxLogLevel string
 	Enviroment      string
@@ -20,6 +26,10 @@ type Config struct {
 		Host         string
 		ReadTimeout  time.Duration
 		WriteTimeout time.Duration
+	}
+	Judge struct {
+		IDOffset int
+		Amount   int
 	}
 	ProblemsDir string
 }
@@ -30,6 +40,8 @@ func Load() (*Config, error) {
 
 	cfg.Database.Uri = getEnv("SUBMISSION_MONGODB_URI", "mongodb://mongosubmissiondb:37017/submissionjudgedb")
 	cfg.Database.Name = getEnv("SUBMISSION_MONGODB_DATABASE_NAME", "submissionjudgedb")
+	cfg.Redis.Uri = getEnv("SUBMISSION_REDIS_URI", "redis://root@redissubmissionjudge:6379")
+	cfg.Redis.Password = getEnv("SUBMISSION_REDIS_PASSWORD", "")
 
 	cfg.Enviroment = getEnv("SUBMISSION_ENV", "Development")
 
@@ -42,6 +54,18 @@ func Load() (*Config, error) {
 	cfg.Server.Host = getEnv("SUBMISSION_HOST", "0.0.0.0")
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.WriteTimeout = time.Second * 15
+
+	numberOfJudges, err := strconv.Atoi(getEnv("SUBMISSION_NUMBER_OF_JUDGE", "10"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse env variable [SUBMISSION_NUMBER_OF_JUDGE] into int: %v", err)
+	}
+	cfg.Judge.IDOffset = numberOfJudges
+
+	judgeIdOffset, err := strconv.Atoi(getEnv("SUBMISSION_JUDGE_ID_OFFSET", "0"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse env variable [SUBMISSION_JUDGE_ID_OFFSET] into int: %v", err)
+	}
+	cfg.Judge.IDOffset = judgeIdOffset
 
 	return cfg, nil
 }

@@ -1,10 +1,10 @@
-package service
+package isolateservice
 
 import (
 	"context"
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
-	"github.com/bibimoni/Online-judge/submission-judge/src/service/impl"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
 )
 
 type IsolateService interface {
