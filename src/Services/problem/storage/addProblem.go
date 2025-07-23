@@ -21,7 +21,7 @@ FUTURE:
 func AddProblem(ProblemId uint64, PackageId uint64) error {
 	err := utils.DownloadPackage(ProblemId, PackageId)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	file, err := os.Open(fmt.Sprintf("%s/%d/problem.json", os.Getenv("PROBLEM_STORAGE_DIR"), ProblemId))

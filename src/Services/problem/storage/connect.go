@@ -18,7 +18,7 @@ var (
 func GetMongoDbClient() error {
 	dbAddress := os.Getenv("PROBLEM_MONGO_URI")
 	if dbAddress == "" {
-		return fmt.Errorf("MONGO_URI not set")
+		return fmt.Errorf("PROBLEM_MONGO_URI not set")
 	}
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	clientOptions := options.Client().ApplyURI(dbAddress).SetServerAPIOptions(serverAPI)

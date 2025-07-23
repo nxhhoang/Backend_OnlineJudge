@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"problem/models"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"problem/models"
 	"regexp"
 	"strconv"
 	"time"
@@ -179,9 +180,10 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return nil
 	})
 
-	if err != nil {
+	cmd := exec.Command("scripts/gen_statement/main.sh", tempdir, dirpath)
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 
-	return nil
+	return err
 }
