@@ -1,15 +1,15 @@
 import { Catch, ArgumentsHost, ExceptionFilter } from '@nestjs/common';
-import { Response } from 'express';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToRpc();
-    const response = ctx.getContext<Response>();
+    const response = ctx.getContext();
 
-    response.send({
+    // For gRPC, throw an error with status and message
+    throw {
       status: 'error',
       message: exception.message || 'Internal server error',
-    });
+    };
   }
 }

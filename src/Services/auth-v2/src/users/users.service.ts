@@ -23,7 +23,7 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async findById(id: string) {
+  async findById(id: number) { // Changed from string to number
     return this.prisma.user.findUnique({ where: { id } });
   }
 }

@@ -26,7 +26,42 @@ export class AuthService {
     }
     const payload = { email: user.email, sub: user.id };
     return {
-      access_token: this.jwtService.sign(payload),
+      code: 0,
+      accessToken: this.jwtService.sign(payload),
     };
+  }
+
+  async validateToken(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token);
+
+      console.log('Decoded token:', decoded);
+      return {
+        code: 0,
+        user: {
+          email: decoded.email,
+          id: decoded.sub,
+        }
+      }
+      // const user = await this.usersService.findByEmail(decoded.email);
+      
+      // if (!user) {
+      //   throw new UnauthorizedException('User not found');
+      // }
+      
+      // // Remove password from response
+      // const { password, ...result } = user;
+      
+      // return {
+      //   code: 0,
+      //   email: result.email,
+      //   id: result.sub,
+      // };
+    } catch (error) {
+      return {
+        code: 1,
+        message: 'Invalid token'
+      };
+    }
   }
 }

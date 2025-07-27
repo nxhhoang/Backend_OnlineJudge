@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { GrpcMethod } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -8,20 +8,20 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @MessagePattern({ cmd: 'create_user' })
-  async create(createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @GrpcMethod('AuthService', 'CreateUser')
+  async create(data: CreateUserDto) {
+    return this.usersService.create(data);
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @MessagePattern({ cmd: 'find_user_by_email' })
-  async findByEmail(email: string) {
-    return this.usersService.findByEmail(email);
+  @GrpcMethod('AuthService', 'FindUserByEmail')
+  async findByEmail(data: { email: string; token: string }) {
+    return this.usersService.findByEmail(data.email);
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @MessagePattern({ cmd: 'find_user_by_id' })
-  async findById(id: string) {
-    return this.usersService.findById(id);
+  @GrpcMethod('AuthService', 'FindUserById')
+  async findById(data: { id: number; token: string }) { // Changed id to number
+    return this.usersService.findById(data.id);
   }
 }

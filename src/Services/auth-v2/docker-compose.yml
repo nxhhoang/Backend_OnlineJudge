@@ -5,31 +5,25 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "50051:50051"
     depends_on:
-      - mongo
-      - redis
+      - mypostgres
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=mongodb://mongo:27017/auth_db
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - DATABASE_URL=postgresql://postgres:postgres@mypostgres:5432/auth_db?schema=public
       - JWT_SECRET=your_jwt_secret
     volumes:
-      - .:/app
+      - ./:/app
       - /app/node_modules
-  mongo:
-    image: mongo:latest
+  mypostgres:
+    image: postgres:latest
     ports:
-      - "27017:27017"
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=auth_db
     volumes:
-      - mongo-data:/data/db
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
+      - postgres-data:/var/lib/postgresql/data
 volumes:
-  mongo-data:
-  redis-data:
+  postgres-data:
