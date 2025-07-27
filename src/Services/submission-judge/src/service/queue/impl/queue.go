@@ -6,11 +6,15 @@ import (
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
+	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
+	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
 	"github.com/hibiken/asynq"
 )
 
 type QueueServiceImpl struct {
-	queue *domain.Queue
+	queue          *domain.Queue
+	poolservice    poolservice.PoolService
+	isolateservice isolateservice.IsolateService
 }
 
 type SubmissionTaskPayload struct {
@@ -34,6 +38,13 @@ func NewQueueServiceImpl() (*QueueServiceImpl, error) {
 		return nil, err
 	}
 
+	pserivce, err := poolservice.NewPoolSerivce()
+	if err != nil {
+		return nil, err
+	}
+
+	iservice := isolateservice.NewIsolateService()
+
 	log := config.GetLogger()
 	return &QueueServiceImpl{
 		queue: &domain.Queue{
@@ -41,6 +52,8 @@ func NewQueueServiceImpl() (*QueueServiceImpl, error) {
 			Server: server,
 			Logger: log,
 		},
+		poolservice:    pserivce,
+		isolateservice: iservice,
 	}, nil
 }
 
@@ -65,6 +78,8 @@ func (qs *QueueServiceImpl) AddSubmission(submission *domain.Submission) error {
 func (qs *QueueServiceImpl) RunServer() error {
 	mux := asynq.NewServeMux()
 
+	mux.HandleFunc(SUBMISSION_SUBMIT, qs.judgeSubmission)
+
 	if err := qs.queue.Server.Run(mux); err != nil {
 		return err
 	}
@@ -72,13 +87,17 @@ func (qs *QueueServiceImpl) RunServer() error {
 	return nil
 }
 
-func judgeSubmission(ctx context.Context, task *asynq.Task) error {
+func (qs *QueueServiceImpl) judgeSubmission(_ context.Context, task *asynq.Task) error {
 	var submisisonPayLoad SubmissionTaskPayload
 	if err := json.Unmarshal(task.Payload(), &submisisonPayLoad); err != nil {
 		return err
 	}
 
+	isolate, err := qs.poolservice.Get()
+	if err != nil {
+		return err
+	}
 	// send submission into isolate
-
+	qs.isolateservice.Judge(isolate, submisisonPayLoad.submission)
 	return nil
 }

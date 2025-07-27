@@ -3,18 +3,19 @@ package main
 import (
 	"context"
 	// "fmt"
-	"github.com/bibimoni/Online-judge/submission-judge/src/components"
+	"net/http"
+
+	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/database"
 	"github.com/bibimoni/Online-judge/submission-judge/src/router"
+	queueservice "github.com/bibimoni/Online-judge/submission-judge/src/service/queue"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		// log.Fatal().Err(err).Msgf("Can not load config")
 		panic("Can't load config")
 	}
 	log := config.NewLogger(cfg.LogLevel)
@@ -25,7 +26,12 @@ func main() {
 	}
 	defer client.Disconnect(context.Background())
 
-	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name))
+	queueService, err := queueservice.NewQueueService()
+	if err != nil {
+		panic("Can't initialize new queue service: " + err.Error())
+	}
+
+	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name), &queueService)
 
 	r := gin.New()
 	r.Use(gin.Recovery())

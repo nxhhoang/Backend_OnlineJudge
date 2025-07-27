@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"context"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -33,7 +32,7 @@ func (ir *IsolateServiceImpl) NewIsolate(id int) (*domain.Isolate, error) {
 	return res, nil
 }
 
-func (ir *IsolateServiceImpl) Cleanup(i *domain.Isolate, _ context.Context) error {
+func (ir *IsolateServiceImpl) Cleanup(i *domain.Isolate) error {
 	cmd := []string{"isolate", "--cg", "-b", strconv.Itoa(i.ID), "--cleanup"}
 
 	i.Logger.Info().Msgf("Cleaning up... Running: %s", cmd)
@@ -42,8 +41,8 @@ func (ir *IsolateServiceImpl) Cleanup(i *domain.Isolate, _ context.Context) erro
 	return exec.Command(cmd[0], cmd[1:]...).Run()
 }
 
-func (ir *IsolateServiceImpl) Init(i *domain.Isolate, ctx context.Context) error {
-	if err := ir.Cleanup(i, ctx); err != nil {
+func (ir *IsolateServiceImpl) Init(i *domain.Isolate) error {
+	if err := ir.Cleanup(i); err != nil {
 		return err
 	}
 
@@ -52,4 +51,8 @@ func (ir *IsolateServiceImpl) Init(i *domain.Isolate, ctx context.Context) error
 	i.Inited = true
 	i.BoxDir = filepath.Join(IsolateRoot, strconv.Itoa(i.ID))
 	return exec.Command(cmd[0], cmd[1:]...).Run()
+}
+
+func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, s *domain.Submission) {
+
 }

@@ -1,16 +1,15 @@
 package isolateservice
 
 import (
-	"context"
-
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
 )
 
 type IsolateService interface {
 	NewIsolate(id int) (*domain.Isolate, error)
-	Cleanup(i *domain.Isolate, _ context.Context) error
-	Init(i *domain.Isolate, ctx context.Context) error
+	Cleanup(i *domain.Isolate) error
+	Init(i *domain.Isolate) error
+	Judge(i *domain.Isolate, s *domain.Submission)
 }
 
 func NewIsolateService() IsolateService {
