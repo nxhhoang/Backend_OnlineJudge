@@ -2,7 +2,7 @@ package router
 
 import (
 	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
-	"github.com/bibimoni/Online-judge/submission-judge/src/controller"
+	"github.com/bibimoni/Online-judge/submission-judge/src/controller/submitsubmission"
 	"github.com/gin-gonic/gin"
 )
 

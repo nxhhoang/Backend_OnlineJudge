@@ -34,7 +34,6 @@ func (ir *IsolateServiceImpl) NewIsolate(id int) (*domain.Isolate, error) {
 
 func (ir *IsolateServiceImpl) Cleanup(i *domain.Isolate) error {
 	cmd := []string{"isolate", "--cg", "-b", strconv.Itoa(i.ID), "--cleanup"}
-
 	i.Logger.Info().Msgf("Cleaning up... Running: %s", cmd)
 	i.Inited = false
 
@@ -53,6 +52,10 @@ func (ir *IsolateServiceImpl) Init(i *domain.Isolate) error {
 	return exec.Command(cmd[0], cmd[1:]...).Run()
 }
 
-func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, s *domain.Submission) {
+func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, rc *domain.RunConfig) {
+
+}
+
+func (ir *IsolateServiceImpl) RunBinary(i *domain.Isolate, rc *domain.RunConfig) {
 
 }

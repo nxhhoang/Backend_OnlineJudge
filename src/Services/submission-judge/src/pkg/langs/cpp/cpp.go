@@ -2,7 +2,6 @@ package cpp
 
 import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
-	_ "github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 )
 
 type Cpp struct {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
-	"github.com/bibimoni/Online-judge/submission-judge/src/usecase"
+	"github.com/bibimoni/Online-judge/submission-judge/src/usecase/submitsubmission"
 )
 
 type SubmissionInteractor struct {

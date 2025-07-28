@@ -1,9 +1,6 @@
 package domain
 
 import (
-	"time"
-
-	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	"github.com/rs/zerolog"
 )
 
@@ -15,10 +12,4 @@ type Isolate struct {
 	MetaFile string
 	Logger   *zerolog.Logger
 	Inited   bool
-}
-
-// This will be the arguments passed to isolate
-type RunConfig struct {
-	TimeLimit   time.Duration
-	MemoryLimit memory.Memory
 }

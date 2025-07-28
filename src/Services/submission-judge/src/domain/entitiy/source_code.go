@@ -8,4 +8,5 @@ type SourceCode struct {
 	CreatedAt string        `json:"create_at,omitempty" bson:"create_at"`
 	Name      string        `json:"name,omitempty" bson:"name"`
 	FileSize  int           `json:"file_size,omitempty" bson:"file_size"`
+	SourceDir string        `json:"source_dir,omitempty"`
 }
