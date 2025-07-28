@@ -9,7 +9,8 @@ type IsolateService interface {
 	NewIsolate(id int) (*domain.Isolate, error)
 	Cleanup(i *domain.Isolate) error
 	Init(i *domain.Isolate) error
-	Judge(i *domain.Isolate, s *domain.Submission)
+	Judge(i *domain.Isolate, rc *domain.RunConfig)
+	RunBinary(i *domain.Isolate, rc *domain.RunConfig)
 }
 
 func NewIsolateService() IsolateService {

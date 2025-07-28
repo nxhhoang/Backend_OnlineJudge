@@ -15,7 +15,7 @@ type (
 		Username       string                `json:"username,omitempty"`
 		ProblemId      string                `json:"problem_id,omitempty"`
 		Code           string                `json:"code,omitempty"`
-		Language       string                `json:"language,omitempty"`
+		LanguageId     string                `json:"language,omitempty"`
 		SubmissionType domain.SubmissionType `json:"submission_type,omitempty"`
 	}
 

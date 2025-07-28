@@ -10,6 +10,7 @@ type StoreService interface {
 	Get(id string) (pkg.Language, error)
 	Register(l pkg.Language)
 	List() []pkg.Language
+	Contains(id string) bool
 }
 
 func NewStoreService() StoreService {

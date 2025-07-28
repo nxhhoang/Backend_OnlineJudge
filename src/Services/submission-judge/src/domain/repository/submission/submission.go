@@ -5,7 +5,7 @@ import (
 
 	_ "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
-	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/impl"
+	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 

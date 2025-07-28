@@ -93,11 +93,11 @@ func (qs *QueueServiceImpl) judgeSubmission(_ context.Context, task *asynq.Task)
 		return err
 	}
 
-	isolate, err := qs.poolservice.Get()
-	if err != nil {
-		return err
-	}
+	// isolate, err := qs.poolservice.Get()
+	// if err != nil {
+	// 	return err
+	// }
 	// send submission into isolate
-	qs.isolateservice.Judge(isolate, submisisonPayLoad.submission)
+	// qs.isolateservice.Judge(isolate, submisisonPayLoad.submission)
 	return nil
 }

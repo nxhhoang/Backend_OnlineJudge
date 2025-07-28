@@ -36,3 +36,8 @@ func (ss *StoreServiceImpl) Register(l pkg.Language) {
 func (ss *StoreServiceImpl) List() []pkg.Language {
 	return ss.languageList
 }
+
+func (ss *StoreServiceImpl) Contains(id string) bool {
+	_, err := ss.Get(id)
+	return err == nil
+}
