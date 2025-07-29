@@ -27,7 +27,8 @@ type Config struct {
 		ReadTimeout  time.Duration
 		WriteTimeout time.Duration
 	}
-	Judge struct {
+	ProblemServerAddr string
+	Judge             struct {
 		IDOffset int
 		Amount   int
 	}
@@ -54,6 +55,8 @@ func Load() (*Config, error) {
 	cfg.Server.Host = getEnv("SUBMISSION_HOST", "0.0.0.0")
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.WriteTimeout = time.Second * 15
+
+	cfg.ProblemServerAddr = "http://problem" + ":" + getEnv("PROBLEM_PORT", "3000") + "/problem/"
 
 	numberOfJudges, err := strconv.Atoi(getEnv("SUBMISSION_NUMBER_OF_JUDGE", "10"))
 	if err != nil {

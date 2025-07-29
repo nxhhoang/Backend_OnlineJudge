@@ -1,8 +1,8 @@
 package utils_test
 
 import (
-	"problem/utils"
 	"log"
+	"problem/utils"
 	"testing"
 
 	"github.com/joho/godotenv"

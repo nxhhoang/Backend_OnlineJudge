@@ -6,7 +6,6 @@ import (
 	"time"
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
-	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -24,8 +23,6 @@ func NewSourcecodeRepositoryImpl(db *mongo.Database) *SourcecodeRepositoryImpl {
 }
 
 func (sr *SourcecodeRepositoryImpl) CreateSourcecode(ctx context.Context, source string, languageId string) (string, error) {
-	log := config.GetLogger()
-	log.Debug().Msgf("%v", store.DefaultStore.List())
 	if !store.DefaultStore.Contains(languageId) {
 		return "", fmt.Errorf("Currently there is no support for language %s", languageId)
 	}

@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"problem/models"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"problem/models"
 	"regexp"
 	"strconv"
 	"time"
@@ -36,7 +36,7 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		"time":      fmt.Sprintf("%d", time.Now().Unix()),
 	}
 
-	dirpath := fmt.Sprintf("%s/%s", os.Getenv("STORAGE_DIR"), params["problemId"])
+	dirpath := fmt.Sprintf("%s/%s", os.Getenv("PROBLEM_STORAGE_DIR"), params["problemId"])
 	if err := os.RemoveAll(dirpath); err != nil {
 		return err
 	}
