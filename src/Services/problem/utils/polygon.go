@@ -10,11 +10,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"problem/models"
 	"regexp"
 	"strconv"
 	"time"
+	"bytes"
 
 	"github.com/xyproto/unzip"
 )
@@ -121,6 +123,8 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 	if xml, err = os.Open(tempdir + "/problem.xml"); err != nil {
 		return err
 	}
+	defer xml.Close()
+
 	var problem models.Problem
 	if problem, err = ParseProblemStruct(problemId, xml); err != nil {
 		return err
@@ -179,9 +183,19 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return nil
 	})
 
-	if err != nil {
-		return err
+	var errBuffer bytes.Buffer
+
+	cmd := exec.Command("scripts/gen_statement/main.sh", tempdir, dirpath)
+	cmd.Stderr = &errBuffer
+	if  err := cmd.Run(); err != nil {
+		return fmt.Errorf("error creating statement: %s", errBuffer)
 	}
 
-	return nil
+	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, dirpath)
+	cmd.Stderr = &errBuffer
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("error compiling checker: %s", errBuffer)
+	}
+
+	return err
 }
