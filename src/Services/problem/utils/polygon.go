@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"bytes"
 
 	"github.com/xyproto/unzip"
 )
@@ -37,7 +38,7 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		"time":      fmt.Sprintf("%d", time.Now().Unix()),
 	}
 
-	dirpath := fmt.Sprintf("%s/%s", os.Getenv("STORAGE_DIR"), params["problemId"])
+	dirpath := fmt.Sprintf("%s/%s", os.Getenv("PROBLEM_STORAGE_DIR"), params["problemId"])
 	if err := os.RemoveAll(dirpath); err != nil {
 		return err
 	}
@@ -122,6 +123,8 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 	if xml, err = os.Open(tempdir + "/problem.xml"); err != nil {
 		return err
 	}
+	defer xml.Close()
+
 	var problem models.Problem
 	if problem, err = ParseProblemStruct(problemId, xml); err != nil {
 		return err
@@ -180,9 +183,18 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return nil
 	})
 
+	var errBuffer bytes.Buffer
+
 	cmd := exec.Command("scripts/gen_statement/main.sh", tempdir, dirpath)
+	cmd.Stderr = &errBuffer
+	if  err := cmd.Run(); err != nil {
+		return fmt.Errorf("error creating statement: %s", errBuffer)
+	}
+
+	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, dirpath)
+	cmd.Stderr = &errBuffer
 	if err := cmd.Run(); err != nil {
-		return err
+		return fmt.Errorf("error compiling checker: %s", errBuffer)
 	}
 
 	return err
