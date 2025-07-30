@@ -20,6 +20,7 @@ type (
 	}
 
 	SubmitSubmissionResponse struct {
-		ID string `json:"id"`
+		Message string `json:"id"`
+		// ID string `json:"id"`
 	}
 )

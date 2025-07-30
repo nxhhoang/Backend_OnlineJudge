@@ -7,6 +7,7 @@ import (
 
 type AppContext interface {
 	GetMainDbConnection() *mongo.Database
+	GetQueueService() *queueservice.QueueService
 }
 
 type appCtx struct {
@@ -21,10 +22,10 @@ func NewAppContext(database *mongo.Database, queueService *queueservice.QueueSer
 	}
 }
 
-func (ctx *appCtx) GetMainDbConnection() *mongo.Database {
-	return ctx.database
-}
-
 func (ctx *appCtx) GetQueueService() *queueservice.QueueService {
 	return ctx.queueService
+}
+
+func (ctx *appCtx) GetMainDbConnection() *mongo.Database {
+	return ctx.database
 }

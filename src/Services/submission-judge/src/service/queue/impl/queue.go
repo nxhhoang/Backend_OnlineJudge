@@ -18,7 +18,10 @@ type QueueServiceImpl struct {
 }
 
 type SubmissionTaskPayload struct {
-	submission *domain.Submission
+	Username       string
+	ProblemId      string
+	Sourcecode     string
+	SubmissionType domain.SubmissionType
 }
 
 const (
@@ -57,8 +60,8 @@ func NewQueueServiceImpl() (*QueueServiceImpl, error) {
 	}, nil
 }
 
-func (qs *QueueServiceImpl) AddSubmission(submission *domain.Submission) error {
-	payload, err := json.Marshal(SubmissionTaskPayload{submission})
+func (qs *QueueServiceImpl) AddSubmission(spayload *SubmissionTaskPayload) error {
+	payload, err := json.Marshal(spayload)
 	if err != nil {
 		return err
 	}
