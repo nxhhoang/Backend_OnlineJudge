@@ -15,7 +15,8 @@ printf "%send{exampletable}" "\\" >> examples.tex
 
 ./replace_deprecated.sh
 
-latexmk -xelatex -pdfxe -interaction=nonstopmode main.tex -jobname=statement
-latexmk -xelatex -pdfxe -interaction=nonstopmode main.tex -jobname=statement
+latexmk -xelatex -interaction=nonstopmode main.tex -jobname=statement
+latexmk -xelatex -interaction=nonstopmode main.tex -jobname=statement
+# latexmk -xelatex -gg -f main.tex
 
 exit 0

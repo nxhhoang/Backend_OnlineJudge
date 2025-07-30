@@ -16,7 +16,7 @@ cp scripts/gen_statement/replace_deprecated.sh $workdir || exit -1
 cd $workdir
 
 # ICPC type doesnt have scoring section, so this is psuedo-file
-[ -f yourfile.txt ] && printf "%smyheading{Chấm điểm}\n\n" "\\" | cat - scoring.tex 2>/dev/null > tmp && mv tmp scoring.tex
+[ -f scoring.tex ] && printf "%smyheading{Chấm điểm}\n\n" "\\" | cat - scoring.tex 2>/dev/null > tmp && mv tmp scoring.tex
 touch scoring.tex
 
 ./gen_pdf.sh || exit -1

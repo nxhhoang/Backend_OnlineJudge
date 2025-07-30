@@ -28,6 +28,7 @@ func AddProblem(ProblemId uint64, PackageId uint64) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	var problem models.Problem
 	if err := json.NewDecoder(file).Decode(&problem); err != nil {
