@@ -25,10 +25,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const payload = { email: user.email, sub: user.id };
-    return {
-      code: 0,
-      accessToken: this.jwtService.sign(payload),
-    };
+    return this.jwtService.sign(payload)
   }
 
   async validateToken(token: string) {
@@ -43,25 +40,27 @@ export class AuthService {
           id: decoded.sub,
         }
       }
-      // const user = await this.usersService.findByEmail(decoded.email);
-      
-      // if (!user) {
-      //   throw new UnauthorizedException('User not found');
-      // }
-      
-      // // Remove password from response
-      // const { password, ...result } = user;
-      
-      // return {
-      //   code: 0,
-      //   email: result.email,
-      //   id: result.sub,
-      // };
     } catch (error) {
       return {
         code: 1,
         message: 'Invalid token'
       };
+    }
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const decoded = this.jwtService.verify(refreshToken);
+      const user = await this.usersService.findByEmail(decoded.email);
+      
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const payload = { email: user.email, sub: user.id };
+      return this.jwtService.sign(payload);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
 }

@@ -23,7 +23,8 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async findById(id: number) { // Changed from string to number
-    return this.prisma.user.findUnique({ where: { id } });
+  async findById(user_id: number) { // Changed from string to number
+    console.log('Finding user by user_id:', user_id);
+    return this.prisma.user.findUnique({ where: { id: user_id } });
   }
 }
