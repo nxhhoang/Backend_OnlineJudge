@@ -40,7 +40,7 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
   
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 50051;
   await app.listen(port);
   console.log(`Auth service is running on port ${port}`);
 }
