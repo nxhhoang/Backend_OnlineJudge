@@ -14,7 +14,7 @@ services:
       - JWT_SECRET=your_jwt_secret
     volumes:
       - ./:/app
-      - /app/node_modules
+    restart: unless-stopped
   mypostgres:
     image: postgres:latest
     ports:
