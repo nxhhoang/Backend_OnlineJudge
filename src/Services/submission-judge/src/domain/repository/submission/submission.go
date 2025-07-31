@@ -9,7 +9,7 @@ import (
 )
 
 type SubmissionRepository interface {
-	CreateSubmission(ctx context.Context, params impl.CreateSubmissionInput) error
+	CreateSubmission(ctx context.Context, params impl.CreateSubmissionInput) (string, error)
 }
 
 func NewSubmissionRepository(db *mongo.Database) SubmissionRepository {

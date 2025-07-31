@@ -13,6 +13,9 @@ type RunConfig struct {
 
 	WorkingDirectory string
 	DirectoryMaps    []DirectoryMap
+
+	Env        []string
+	InheritEnv bool
 }
 
 type DirectoryMap struct {

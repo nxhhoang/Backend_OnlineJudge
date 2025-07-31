@@ -41,7 +41,7 @@ func Load() (*Config, error) {
 
 	cfg.Database.Uri = getEnv("SUBMISSION_MONGODB_URI", "mongodb://mongosubmissiondb:37017/submissionjudgedb")
 	cfg.Database.Name = getEnv("SUBMISSION_MONGODB_DATABASE_NAME", "submissionjudgedb")
-	cfg.Redis.Uri = getEnv("SUBMISSION_REDIS_URI", "redis://root@redissubmissionjudge:6379")
+	cfg.Redis.Uri = getEnv("SUBMISSION_REDIS_URI", "redis://:root@redissubmissionjudge:6379")
 	cfg.Redis.Password = getEnv("SUBMISSION_REDIS_PASSWORD", "")
 
 	cfg.Enviroment = getEnv("SUBMISSION_ENV", "Development")

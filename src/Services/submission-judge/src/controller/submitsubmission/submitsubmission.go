@@ -21,7 +21,6 @@ func HandleSubmitSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc
 	log := config.GetLogger()
 
 	db := appContext.GetMainDbConnection()
-	queue := appContext.GetQueueService()
 	submissionRepo := sr.NewSubmissionRepository(db)
 	sourcecodeRepo := scr.NewSourcecodeRepository(db)
 	problemSvc, err := problem.NewProblemService()
@@ -30,7 +29,7 @@ func HandleSubmitSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc
 		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil
 	}
-	submissionInteractor := interactor.NewSubmissionInteractor(submissionRepo, sourcecodeRepo, problemSvc, queue)
+	submissionInteractor := interactor.NewSubmissionInteractor(submissionRepo, sourcecodeRepo, problemSvc)
 
 	return common.InvokeUseCase(
 		toSubmitSubmissionType,

@@ -2,6 +2,7 @@ package interactor
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	scr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode"
@@ -9,7 +10,6 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
-	queueservice "github.com/bibimoni/Online-judge/submission-judge/src/service/queue"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submitsubmission"
 )
 
@@ -17,15 +17,17 @@ type SubmissionInteractor struct {
 	submissionRepo sr.SubmissionRepository
 	sourcecodeRepo scr.SourcecodeRepository
 	problemService problem.ProblemService
-	queueService   *queueservice.QueueService
 }
 
-func NewSubmissionInteractor(sr sr.SubmissionRepository, scr scr.SourcecodeRepository, ps problem.ProblemService, qs *queueservice.QueueService) *SubmissionInteractor {
+func NewSubmissionInteractor(
+	sr sr.SubmissionRepository,
+	scr scr.SourcecodeRepository,
+	ps problem.ProblemService,
+) *SubmissionInteractor {
 	return &SubmissionInteractor{
 		submissionRepo: sr,
 		sourcecodeRepo: scr,
 		problemService: ps,
-		queueService:   qs,
 	}
 }
 
@@ -50,10 +52,25 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 		SourceCodeId: codeId,
 	}
 
-	err = si.submissionRepo.CreateSubmission(ctx, params)
+	submissionId, err := si.submissionRepo.CreateSubmission(ctx, params)
 	if err != nil {
 		return nil, err
 	}
+
+	payload := queueimpl.SubmissionTaskPayload{
+		SubmissionId:   submissionId,
+		Username:       input.Username,
+		Sourcecode:     input.Code,
+		SubmissionType: input.SubmissionType,
+		ProblemId:      input.ProblemId,
+	}
+	err = (*si.queueService).AddSubmission(payload)
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to enqueue submission, id: %s to the queue: %v", submissionId, err)
+	}
+
+	log.Info().Msgf("Enqueued submission successfully, id: %s", submissionId)
 
 	return &usecase.SubmitSubmissionResponse{
 		// ID: codeId,

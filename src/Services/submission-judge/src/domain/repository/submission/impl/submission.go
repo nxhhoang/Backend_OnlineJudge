@@ -27,10 +27,10 @@ func NewSubmissionRepositoryImpl(db *mongo.Database) *SubmissionRepositoryImpl {
 	}
 }
 
-func (sr *SubmissionRepositoryImpl) CreateSubmission(ctx context.Context, params CreateSubmissionInput) error {
+func (sr *SubmissionRepositoryImpl) CreateSubmission(ctx context.Context, params CreateSubmissionInput) (string, error) {
 	sourcecodeId, err := bson.ObjectIDFromHex(params.SourceCodeId)
 	if err != nil {
-		return err
+		return "", err
 	}
 	newSubmission := domain.Submission{
 		Username:     params.Username,
@@ -41,10 +41,10 @@ func (sr *SubmissionRepositoryImpl) CreateSubmission(ctx context.Context, params
 	}
 	got, err := sr.collection.InsertOne(ctx, newSubmission)
 	if err != nil {
-		return nil
+		return "", nil
 	}
 
 	log := config.GetLogger()
 	log.Info().Msgf("Saved submission with id: [%s] to the database", got.InsertedID.(bson.ObjectID).Hex())
-	return err
+	return got.InsertedID.(bson.ObjectID).Hex(), nil
 }

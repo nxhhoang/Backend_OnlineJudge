@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -12,10 +13,20 @@ import (
 // IsolateRoot is the root directory structure isolate is using.
 var IsolateRoot = "/var/local/lib/isolate/"
 
+// isolate -b 0 --time=2 --mem=256000 --dir=/in=/problems_dir/445985/tests/input:rw --dir=/app/=/var/local/lib/isolate/0/box:rw -i /in/01 -o /app/01 --run -- /app/main
+
 type IsolateServiceImpl struct{}
 
 func NewIsolateServiceImpl() *IsolateServiceImpl {
 	return &IsolateServiceImpl{}
+}
+
+type Task struct {
+	SubmissionId   string
+	Username       string
+	Sourcecode     string
+	SubmissionType string
+	ProblemId      string
 }
 
 func (ir *IsolateServiceImpl) NewIsolate(id int) (*domain.Isolate, error) {
@@ -56,6 +67,26 @@ func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, rc *domain.RunConfig) {
 
 }
 
-func (ir *IsolateServiceImpl) RunBinary(i *domain.Isolate, rc *domain.RunConfig) {
+func (ir *IsolateServiceImpl) buildArgs(i *domain.Isolate, rc *domain.RunConfig) ([]string, error) {
+	args := []string{"isolate", "-b", strconv.Itoa(i.ID)}
+	args = append(args, "--processes=1")
+	if rc.InheritEnv {
+		args = append(args, "--full-env")
+	}
+	for ind := range rc.Env {
+		args = append(args, fmt.Sprintf("--env=%s", rc.Env[ind]))
+	}
+	for _, rule := range rc.DirectoryMaps {
+		arg := fmt.Sprintf("--dir=%s=%s", rule.Inside, rule.Outside)
+		for _, opt := range rule.Options {
+			arg += ":" + string(opt)
+		}
+		args = append(args, arg)
+	}
+
+	return args, nil
+}
+
+func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc *domain.RunConfig, inFileLocation string, outFileLocation string) {
 
 }

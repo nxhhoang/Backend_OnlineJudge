@@ -9,7 +9,6 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/database"
 	"github.com/bibimoni/Online-judge/submission-judge/src/router"
-	queueservice "github.com/bibimoni/Online-judge/submission-judge/src/service/queue"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,12 +25,7 @@ func main() {
 	}
 	defer client.Disconnect(context.Background())
 
-	queueService, err := queueservice.NewQueueService()
-	if err != nil {
-		panic("Can't initialize new queue service: " + err.Error())
-	}
-
-	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name), &queueService)
+	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name))
 
 	r := gin.New()
 	r.Use(gin.Recovery())

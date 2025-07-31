@@ -1,6 +1,7 @@
 package cpp
 
 import (
+	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
 )
 
@@ -22,11 +23,12 @@ func (cpp Cpp) DefaultFileName() string {
 	return "main.cpp"
 }
 
-func (cpp Cpp) Run() error {
+func (cpp Cpp) Run(i *domain.Isolate) error {
+
 	return nil
 }
 
-func (cpp Cpp) Compile() error {
+func (cpp Cpp) Compile(i *domain.Isolate) error {
 	return nil
 }
 
