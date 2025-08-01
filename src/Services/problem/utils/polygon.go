@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
@@ -16,35 +17,16 @@ import (
 	"regexp"
 	"strconv"
 	"time"
-	"bytes"
 
 	"github.com/xyproto/unzip"
 )
 
 /*
-DownloadPackge() - Download Polygon problems
-- Problems are stored at $STORAGE_DIR/$problemId/ with structure followed the README.md
-- It removes all downloaded packages of the given problem before downloading the specified package
-
-FUTURE:
+polygonApiCall(): make Polygon API calls
+- Remember to do .Body.Close() the response
 */
-func DownloadPackage(problemId uint64, packageId uint64) error {
+func polygonApiCall(method string, params map[string]string) (*http.Response, error) {
 	apiSecret := os.Getenv("POLYGON_API_SECRET")
-	params := map[string]string{
-		"problemId": strconv.Itoa(int(problemId)),
-		"packageId": strconv.Itoa(int(packageId)),
-		"type":      "linux",
-		"apiKey":    os.Getenv("POLYGON_API_KEY"),
-		"time":      fmt.Sprintf("%d", time.Now().Unix()),
-	}
-
-	dirpath := fmt.Sprintf("%s/%s", os.Getenv("PROBLEM_STORAGE_DIR"), params["problemId"])
-	if err := os.RemoveAll(dirpath); err != nil {
-		return err
-	}
-	if err := os.Mkdir(dirpath, os.ModePerm); err != nil {
-		return nil
-	}
 
 	apiSig := ""
 
@@ -72,19 +54,39 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 
 	apiSig = string(rand_header) + apiSig
 
-	address := "https://polygon.codeforces.com/api/problem.package?"
+	address := fmt.Sprintf("https://polygon.codeforces.com/api/%s?", method)
 	requestParams := url.Values{}
-	requestParams.Add("problemId", params["problemId"])
-	requestParams.Add("packageId", params["packageId"])
-	requestParams.Add("type", params["type"])
-	requestParams.Add("apiKey", params["apiKey"])
-	requestParams.Add("time", params["time"])
 	requestParams.Add("apiSig", apiSig)
+	for key, value := range params {
+		requestParams.Add(key, value)
+	}
 
 	address += requestParams.Encode()
 
-	// make requests
 	resp, err := http.Get(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+/*
+DownloadPackge() - Download Polygon problems
+- Problems are stored at $STORAGE_DIR/$problemId/ with structure following the README.md
+- It removes all downloaded packages of the given problem before downloading the specified package
+
+FUTURE:
+*/
+func DownloadPackage(problemId uint64, packageId uint64) error {
+	params := map[string]string{
+		"problemId": strconv.Itoa(int(problemId)),
+		"packageId": strconv.Itoa(int(packageId)),
+		"apiKey":    os.Getenv("POLYGON_API_KEY"),
+		"type":      "linux",
+		"time":      fmt.Sprintf("%d", time.Now().Unix()),
+	}
+	resp, err := polygonApiCall("problem.package", params)
 	if err != nil {
 		return err
 	}
@@ -107,6 +109,14 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 
 	if _, err = f.Write(body); err != nil {
 		return err
+	}
+
+	dirpath := fmt.Sprintf("%s/%s", os.Getenv("PROBLEM_STORAGE_DIR"), params["problemId"])
+	if err := os.RemoveAll(dirpath); err != nil {
+		return err
+	}
+	if err := os.Mkdir(dirpath, os.ModePerm); err != nil {
+		return nil
 	}
 
 	tempdir, err := os.MkdirTemp("", "")
@@ -187,7 +197,7 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 
 	cmd := exec.Command("scripts/gen_statement/main.sh", tempdir, dirpath)
 	cmd.Stderr = &errBuffer
-	if  err := cmd.Run(); err != nil {
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error creating statement: %s", errBuffer)
 	}
 
