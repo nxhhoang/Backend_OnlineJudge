@@ -1,8 +1,8 @@
 package utils_test
 
 import (
-	"problem/utils"
 	"log"
+	"problem/utils/polygon"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -14,7 +14,7 @@ func TestSuccessfulDownload(t *testing.T) {
 		log.Println("No .env file found or failed to load")
 	}
 
-	result := utils.DownloadPackage(332909, 1154548)
+	result := polygon.DownloadPackage(332909, 1154548)
 	var expected error = nil
 
 	if result != expected {

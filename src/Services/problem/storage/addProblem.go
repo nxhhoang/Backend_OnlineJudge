@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"problem/models"
-	"problem/utils"
+	"problem/utils/polygon"
 )
 
 /*
@@ -19,7 +19,7 @@ FUTURE:
 */
 
 func AddProblem(ProblemId uint64, PackageId uint64) error {
-	err := utils.DownloadPackage(ProblemId, PackageId)
+	err := polygon.DownloadPackage(ProblemId, PackageId)
 	if err != nil {
 		return err
 	}
