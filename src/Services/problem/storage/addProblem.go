@@ -18,9 +18,14 @@ FUTURE:
 - Automatically get the latest package of the problem
 */
 
-func AddProblem(ProblemId uint64, PackageId uint64) error {
-	err := polygon.DownloadPackage(ProblemId, PackageId)
+func AddProblem(ProblemId uint64) error {
+	var PackageId uint64
+	PackageId, err := polygon.GetLastestPackage(ProblemId)
 	if err != nil {
+		return err
+	}
+
+	if err := polygon.DownloadPackage(ProblemId, PackageId); err != nil {
 		return err
 	}
 
