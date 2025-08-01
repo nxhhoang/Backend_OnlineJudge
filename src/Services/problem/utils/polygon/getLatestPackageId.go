@@ -31,7 +31,7 @@ func GetLastestPackage(problemId uint64) (uint64, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return 0, fmt.Errorf("Get error while getting latest packageId: %s", resp.Body)
+		return 0, fmt.Errorf("get error while getting latest packageId: %s", resp.Body)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -40,15 +40,12 @@ func GetLastestPackage(problemId uint64) (uint64, error) {
 
 	fmt.Println(string(body))
 
-	var packageId uint64
-
 	var return_json returnStruct
 	if err := json.Unmarshal(body, &return_json); err != nil {
 		return 0, err
 	}
 
 	for _, pkg := range return_json.Result {
-		fmt.Printf("%v\n", pkg)
 		if pkg.State != "READY" {
 			continue
 
@@ -61,8 +58,4 @@ func GetLastestPackage(problemId uint64) (uint64, error) {
 	}
 
 	return 0, fmt.Errorf("no valid packages found")
-
-	// fmt.Printf("%v\n", return_json)
-
-	return packageId, nil
 }
