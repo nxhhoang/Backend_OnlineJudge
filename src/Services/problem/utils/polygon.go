@@ -37,7 +37,7 @@ func polygonApiCall(method string, params map[string]string) (*http.Response, er
 	for i := range 6 {
 		rand_header[i] = charset[rand.Intn(len(charset))]
 	}
-	apiSig += fmt.Sprintf("%s/problem.package?", rand_header)
+	apiSig += fmt.Sprintf("%s/%s?", rand_header, method)
 
 	keys := GetSortedKeys(&params, func(a, b string) bool { return a < b })
 	for k, v := range keys {
