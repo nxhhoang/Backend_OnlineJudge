@@ -23,7 +23,7 @@ func ProblemRoute(router fiber.Router) {
 		}
 
 		if err := storage.AddProblem(uint64(problemId), uint64(packageId)); err != nil {
-			return c.SendString(fmt.Sprintf("Got error: %s", err.Error()))
+			return c.Status(500).SendString(fmt.Sprintf("Got error: %s", err.Error()))
 		}
 
 		return c.SendStatus(200)

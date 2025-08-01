@@ -35,9 +35,9 @@ func AddProblem(ProblemId uint64, PackageId uint64) error {
 		return err
 	}
 
-	if _, err := db.Database("Problems").Collection("Problems").InsertOne(ctx, problem); err != nil {
-		return err
-	}
+	// if _, err := db.Database("Problems").Collection("Problems").InsertOne(ctx, problem); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
