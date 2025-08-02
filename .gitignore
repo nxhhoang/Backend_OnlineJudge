@@ -1,0 +1,5 @@
+postgres-data/
+problem-db-data/
+redis-submission-judge/
+storage/
+submission-judge-db-data/
