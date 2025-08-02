@@ -62,7 +62,7 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse env variable [SUBMISSION_NUMBER_OF_JUDGE] into int: %v", err)
 	}
-	cfg.Judge.IDOffset = numberOfJudges
+	cfg.Judge.Amount = numberOfJudges
 
 	judgeIdOffset, err := strconv.Atoi(getEnv("SUBMISSION_JUDGE_ID_OFFSET", "0"))
 	if err != nil {

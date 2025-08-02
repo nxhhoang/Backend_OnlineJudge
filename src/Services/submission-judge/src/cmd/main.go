@@ -37,8 +37,9 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(gin.Logger())
-
 	v1 := r.Group("/api/v1")
+
+	gin.SetMode(gin.DebugMode)
 
 	router.RegisterRouter(v1, appCtx)
 

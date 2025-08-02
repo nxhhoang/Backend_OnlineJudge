@@ -24,12 +24,11 @@ func HandleSubmitSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc
 	submissionRepo := sr.NewSubmissionRepository(db)
 	sourcecodeRepo := scr.NewSourcecodeRepository(db)
 	problemSvc, err := problem.NewProblemService()
-
 	if err != nil {
 		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil
 	}
-	submissionInteractor := interactor.NewSubmissionInteractor(submissionRepo, sourcecodeRepo, problemSvc)
+	submissionInteractor := interactor.NewSubmissionInteractor(submissionRepo, sourcecodeRepo, problemSvc, appContext.GetPool())
 
 	return common.InvokeUseCase(
 		toSubmitSubmissionType,

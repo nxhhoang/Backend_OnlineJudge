@@ -7,6 +7,7 @@ import (
 
 type AppContext interface {
 	GetMainDbConnection() *mongo.Database
+	GetPool() *poolservice.PoolService
 }
 
 type appCtx struct {

@@ -6,7 +6,7 @@ type Language interface {
 	ID() string
 	DisplayName() string
 	DefaultFileName() string
-	Judge(i *domain.Isolate, req *SubmissionRequest) string
+	Judge(i *domain.Isolate, req *SubmissionRequest) error
 }
 
 type SubmissionRequest struct {

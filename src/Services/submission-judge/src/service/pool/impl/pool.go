@@ -31,6 +31,9 @@ func NewPoolServiceImpl() (*PoolServiceImpl, error) {
 		isolateService: is,
 	}
 
+	log := config.GetLogger()
+	log.Info().Msgf("Offset: %d, amount: %d", cfg.Judge.IDOffset, cfg.Judge.Amount)
+	// Init all isolate
 	for i := cfg.Judge.IDOffset; i < (cfg.Judge.IDOffset + cfg.Judge.Amount); i++ {
 		newIsolate, err := is.NewIsolate(i)
 		if err != nil {
@@ -40,7 +43,7 @@ func NewPoolServiceImpl() (*PoolServiceImpl, error) {
 		newPool.Put(newIsolate)
 	}
 
-	// Init all isolate
+	log.Info().Msgf("Finished initialized pool service")
 
 	return newPool, nil
 }

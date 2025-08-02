@@ -22,6 +22,10 @@ var IsolateWorkingDirName = "app"
 
 // isolate -b 0 --time=2 --mem=256000 --dir=/in=/problems_dir/445985/tests/input:rw --dir=/app/=/var/local/lib/isolate/0/box:rw -i /in/01 -o /app/01 --run -- /app/main
 
+func GetIsolateDir(i *domain.Isolate) string {
+	return IsolateRoot + strconv.Itoa(i.ID) + "/box"
+}
+
 func GetIsolateInputDir(submissionId string) string {
 	return submissionId + "/" + IsolateInputDirName
 }
@@ -61,7 +65,7 @@ func (ir *IsolateServiceImpl) NewIsolate(id int) (*domain.Isolate, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.Logger = log
+		(*res).Logger = log
 	}
 	return res, nil
 }
@@ -83,11 +87,10 @@ func (ir *IsolateServiceImpl) Init(i *domain.Isolate) error {
 	i.Logger.Info().Msgf("Creating isolate... Running: %s", cmd)
 	i.Inited = true
 	i.BoxDir = filepath.Join(IsolateRoot, strconv.Itoa(i.ID))
+
+	log := config.GetLogger()
+	log.Info().Msgf("Inited isolate service with id: %d", i.ID)
 	return exec.Command(cmd[0], cmd[1:]...).Run()
-}
-
-func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, rc *domain.RunConfig, req *pkg.SubmissionRequest) {
-
 }
 
 // This method added input directory to the run config, this also verify if the directory exists
@@ -139,10 +142,11 @@ func buildArgs(i *domain.Isolate, rc *domain.RunConfig) ([]string, error) {
 	return args, nil
 }
 
-func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc *domain.RunConfig, req *pkg.SubmissionRequest) {
+func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc *domain.RunConfig, req *pkg.SubmissionRequest) error {
 
+	return nil
 }
 
-func (ir *IsolateServiceImpl) CreateSubmissionFile(sourceCode string, submissionId string) {
-
+func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, rc *domain.RunConfig, req *pkg.SubmissionRequest) error {
+	return nil
 }

@@ -2,7 +2,7 @@ package store
 
 import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
-	// "github.com/bibimoni/Online-judge/submission-judge/src/pkg/langs/cpp"
+	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/langs/cpp"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/store/impl"
 )
 
@@ -19,9 +19,9 @@ func NewStoreService() StoreService {
 
 func NewStoreWithDefaultLangs() StoreService {
 	storeService := NewStoreService()
-	// for _, option := range cpp.GetAllOptions() {
-	// 	storeService.Register(option)
-	// }
+	for _, option := range cpp.GetAllOptions() {
+		storeService.Register(option)
+	}
 	return storeService
 }
 
