@@ -2,14 +2,15 @@ package interactor
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	scr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode"
 	sr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission"
 	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
+	// "github.com/bibimoni/Online-judge/submission-judge/src/pkg"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
+	// "github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submitsubmission"
 )
 
@@ -56,18 +57,17 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 	if err != nil {
 		return nil, err
 	}
+	// req := pkg.SubmissionRequest{
+	// 	SubmissionId:   submissionId,
+	// 	Username:       input.Username,
+	// 	Sourcecode:     input.Code,
+	// 	SubmissionType: input.SubmissionType,
+	// 	ProblemId:      input.ProblemId,
+	// }
 
-	payload := queueimpl.SubmissionTaskPayload{
-		SubmissionId:   submissionId,
-		Username:       input.Username,
-		Sourcecode:     input.Code,
-		SubmissionType: input.SubmissionType,
-		ProblemId:      input.ProblemId,
-	}
-	err = (*si.queueService).AddSubmission(payload)
-
+	// lang, err := store.DefaultStore.Get(input.LanguageId)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to enqueue submission, id: %s to the queue: %v", submissionId, err)
+		return nil, err
 	}
 
 	log.Info().Msgf("Enqueued submission successfully, id: %s", submissionId)

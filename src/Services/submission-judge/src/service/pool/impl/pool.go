@@ -19,7 +19,10 @@ func NewPoolServiceImpl() (*PoolServiceImpl, error) {
 		return nil, err
 	}
 
-	is := isolateservice.NewIsolateService()
+	is, err := isolateservice.NewIsolateService()
+	if err != nil {
+		return nil, err
+	}
 
 	newPool := &PoolServiceImpl{
 		pool: &domain.Pool{

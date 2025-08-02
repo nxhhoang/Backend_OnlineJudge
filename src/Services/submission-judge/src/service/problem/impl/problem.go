@@ -2,7 +2,10 @@ package impl
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/bibimoni/Online-judge/submission-judge/src/common"
@@ -41,6 +44,89 @@ func (ps *ProblemServiceImpl) Get(ctx context.Context, id string) (*ProblemServi
 	}
 	return result, nil
 }
+
+func fileExsits(path string) (bool, error) {
+	if _, err := os.Stat(path); err == nil {
+		return true, nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	} else {
+		return false, fmt.Errorf("An error occured when trying to verify if a file exists")
+	}
+}
+
+func (ps *ProblemServiceImpl) GetTestCaseDirAddr(problemId string, tcType TestCaseType) (string, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return "", err
+	}
+
+	stringAddr := cfg.ProblemsDir + "/" + problemId + "/tests"
+	switch tcType {
+	case INPUT:
+		stringAddr += "/input/"
+	case OUTPUT:
+		stringAddr += "/output/"
+	default:
+		return "", fmt.Errorf("Please provide either INPUT or OUTPUT for testcase type")
+	}
+
+	stat, err := fileExsits(stringAddr)
+	if err != nil {
+		return "", err
+	}
+	if !stat {
+		return "", fmt.Errorf("This directory isn't available")
+	}
+	return stringAddr, nil
+}
+
+func (ps *ProblemServiceImpl) GetTestCaseAddr(problemId string, tcType TestCaseType, testNum int) (string, error) {
+	stringAddr, err := ps.GetTestCaseDirAddr(problemId, tcType)
+	if err != nil {
+		return "", err
+	}
+
+	conv := strconv.Itoa(testNum)
+	if len(conv) == 1 {
+		conv = "0" + conv
+	}
+
+	stringAddr += conv
+
+	stat, err := fileExsits(stringAddr)
+	if err != nil {
+		return "", err
+	}
+	if !stat {
+		return "", fmt.Errorf("This test file isn't available")
+	}
+	return stringAddr, nil
+}
+
+func (ps *ProblemServiceImpl) GetCheckerAddr(problemId string) (string, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return "", err
+	}
+
+	stringAddr := cfg.ProblemsDir + "/" + problemId + "/checker"
+	stat, err := fileExsits(stringAddr)
+	if err != nil {
+		return "", err
+	}
+	if !stat {
+		return "", fmt.Errorf("This test file isn't available")
+	}
+	return stringAddr, nil
+}
+
+type TestCaseType string
+
+const (
+	INPUT  TestCaseType = "INPUT"
+	OUTPUT TestCaseType = "OUTPUT"
+)
 
 type ProblemServiceGetOutput struct {
 	ID          string   `json:"ID,omitempty"`

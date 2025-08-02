@@ -8,14 +8,13 @@ import (
 
 // This will be the arguments passed to isolate
 type RunConfig struct {
-	TimeLimit   time.Duration
-	MemoryLimit memory.Memory
-
+	TimeLimit        time.Duration
+	MemoryLimit      memory.Memory
 	WorkingDirectory string
 	DirectoryMaps    []DirectoryMap
-
-	Env        []string
-	InheritEnv bool
+	Env              []string
+	InheritEnv       bool
+	MaxProcesses     int
 }
 
 type DirectoryMap struct {

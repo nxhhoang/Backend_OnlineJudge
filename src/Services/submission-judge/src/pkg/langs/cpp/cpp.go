@@ -23,13 +23,17 @@ func (cpp Cpp) DefaultFileName() string {
 	return "main.cpp"
 }
 
-func (cpp Cpp) Run(i *domain.Isolate) error {
+// func (cpp Cpp) Run(i *domain.Isolate) error {
+//
+// 	return nil
+// }
+//
+// func (cpp Cpp) Compile(i *domain.Isolate) error {
+// 	return nil
+// }
 
-	return nil
-}
+func (cpp Cpp) Judge(i *domain.Isolate, req *pkg.SubmissionRequest) {
 
-func (cpp Cpp) Compile(i *domain.Isolate) error {
-	return nil
 }
 
 var DefaultCompileArgs = []string{"-O2", "-static", "-DONLINE_JUDGE"}
@@ -58,6 +62,6 @@ var cpp20 = Cpp{
 	compileArgs: append(DefaultCompileArgs, "-std=c++20"),
 }
 
-func GetAllOptions() []pkg.Language {
-	return []pkg.Language{cpp11, cpp14, cpp17, cpp20}
-}
+// func GetAllOptions() []pkg.Language {
+// return []pkg.Language{cpp11, cpp14, cpp17, cpp20}
+// }

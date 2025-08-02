@@ -10,6 +10,9 @@ import (
 // served by the Problem service (the name might be a little confusing)
 type ProblemService interface {
 	Get(ctx context.Context, id string) (*impl.ProblemServiceGetOutput, error)
+	GetTestCaseAddr(problemId string, tcType impl.TestCaseType, testNum int) (string, error)
+	GetTestCaseDirAddr(problemId string, tcType impl.TestCaseType) (string, error)
+	GetCheckerAddr(problemId string) (string, error)
 }
 
 func NewProblemService() (ProblemService, error) {

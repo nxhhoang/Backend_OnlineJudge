@@ -9,6 +9,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/database"
 	"github.com/bibimoni/Online-judge/submission-judge/src/router"
+	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,7 +26,13 @@ func main() {
 	}
 	defer client.Disconnect(context.Background())
 
-	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name))
+	pool, err := poolservice.NewPoolSerivce()
+
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Can't initialize new pool service")
+	}
+
+	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name), &pool)
 
 	r := gin.New()
 	r.Use(gin.Recovery())
