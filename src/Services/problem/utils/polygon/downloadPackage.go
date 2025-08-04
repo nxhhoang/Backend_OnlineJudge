@@ -7,10 +7,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"problem/models"
 	"problem/utils"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -90,67 +88,24 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return err
 	}
 
-	if err := os.Mkdir(dirpath+"/tests", os.ModePerm); err != nil {
-		return err
-	}
-	if err := os.Mkdir(dirpath+"/tests/input", os.ModePerm); err != nil {
-		return err
-	}
-	if err := os.Mkdir(dirpath+"/tests/output", os.ModePerm); err != nil {
-		return err
-	}
-
-	r, err := regexp.Compile(`\.a$`)
-	if err != nil {
-		return nil
-	}
-
-	err = filepath.Walk(tempdir+"/tests/", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		sourceFile, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer sourceFile.Close()
-
-		var destFile io.Writer
-
-		if !r.Match([]byte(info.Name())) {
-			destFile, err = os.Create(dirpath + "/tests/input/" + info.Name())
-		} else {
-			destFile, err = os.Create(dirpath + "/tests/output/" + info.Name()[:len(info.Name())-2]) // remove the .a extension
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if _, err := io.Copy(destFile, sourceFile); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
 	var errBuffer bytes.Buffer
 
-	cmd := exec.Command("scripts/gen_statement/main.sh", tempdir, dirpath)
+	cmd := exec.Command("scripts/get_tests/main.sh", tempdir, dirpath)
 	cmd.Stderr = &errBuffer
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error creating statement: %s", errBuffer)
+		return fmt.Errorf("error getting tests: %s", errBuffer.String())
+	}
+
+	cmd = exec.Command("scripts/gen_statement/main.sh", tempdir, dirpath)
+	cmd.Stderr = &errBuffer
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("error creating statement: %s", errBuffer.String())
 	}
 
 	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, dirpath)
 	cmd.Stderr = &errBuffer
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error compiling checker: %s", errBuffer)
+		return fmt.Errorf("error compiling checker: %s", errBuffer.String())
 	}
 
 	return err
