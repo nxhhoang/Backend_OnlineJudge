@@ -70,6 +70,17 @@ services:
       - ./problem-db-data:/data/db
     networks:
       - online-judge-network
+  contest:
+    build: ./src/Services/contest/
+    container_name: contest
+    ports:
+      - '2000:2000'
+    env_file:
+      - ./.env
+    volumes:
+      - ./src/Services/contest:/app
+    networks:
+      - online-judge-network
 networks:
   online-judge-network:
     driver: bridge
