@@ -5,6 +5,7 @@ import (
 	"time"
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
+	repository "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -14,20 +15,17 @@ type SubmissionRepositoryImpl struct {
 	collection *mongo.Collection
 }
 
-type CreateSubmissionInput struct {
-	ProblemId    string
-	Username     string
-	SourceCodeId string
-	Type         domain.SubmissionType
-}
-
 func NewSubmissionRepositoryImpl(db *mongo.Database) *SubmissionRepositoryImpl {
 	return &SubmissionRepositoryImpl{
 		collection: db.Collection("Submission"),
 	}
 }
 
-func (sr *SubmissionRepositoryImpl) CreateSubmission(ctx context.Context, params CreateSubmissionInput) (string, error) {
+func NewSubmissionRepository(db *mongo.Database) repository.SubmissionRepository {
+	return NewSubmissionRepositoryImpl(db)
+}
+
+func (sr *SubmissionRepositoryImpl) CreateSubmission(ctx context.Context, params repository.CreateSubmissionInput) (string, error) {
 	sourcecodeId, err := bson.ObjectIDFromHex(params.SourceCodeId)
 	if err != nil {
 		return "", err

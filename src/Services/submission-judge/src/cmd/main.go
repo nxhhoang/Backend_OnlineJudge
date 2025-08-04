@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	// "fmt"
 	"net/http"
 
 	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/database"
 	"github.com/bibimoni/Online-judge/submission-judge/src/router"
-	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
+	pi "github.com/bibimoni/Online-judge/submission-judge/src/service/pool/impl"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
+	si "github.com/bibimoni/Online-judge/submission-judge/src/service/store/impl"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,11 +27,13 @@ func main() {
 	}
 	defer client.Disconnect(context.Background())
 
-	pool, err := poolservice.NewPoolSerivce()
+	pool, err := pi.NewPoolSerivce()
 
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Can't initialize new pool service")
 	}
+
+	store.DefaultStore = si.NewStoreWithDefaultLangs()
 
 	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name), &pool)
 

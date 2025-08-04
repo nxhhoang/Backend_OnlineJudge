@@ -1,18 +1,18 @@
 package pkg
 
-import domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
+import (
+	"io"
+
+	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
+	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
+)
 
 type Language interface {
 	ID() string
 	DisplayName() string
 	DefaultFileName() string
-	Judge(i *domain.Isolate, req *SubmissionRequest) error
-}
-
-type SubmissionRequest struct {
-	SubmissionId   string
-	Username       string
-	Sourcecode     string
-	SubmissionType domain.SubmissionType
-	ProblemId      string
+	ExecutableName() string
+	FileExtension() string
+	Judge(i *domain.Isolate, req *isolateservice.SubmissionRequest) error
+	Compile(i *domain.Isolate, req *isolateservice.SubmissionRequest, stderr io.Writer) error
 }

@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -9,18 +10,24 @@ import (
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
-	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
+	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem/impl"
 )
 
 // IsolateRoot is the root directory structure isolate is using.
 var IsolateRoot = "/var/local/lib/isolate/"
-var IsolateInputDirName = "in"
-var IsolateWorkingDirName = "app"
+var IsolateInputDirName = "/in"
+var IsolateWorkingDirName = "/app"
+var IsolateMetaFileName = "/meta"
 
-// isolate -b 0 --time=2 --mem=256000 --dir=/in=/problems_dir/445985/tests/input:rw --dir=/app/=/var/local/lib/isolate/0/box:rw -i /in/01 -o /app/01 --run -- /app/main
+var ErrorIsolateNotInitialized = errors.New("initialize the isolate first")
+
+/*
+isolate -b 0 --time=2 --mem=256000 --dir=/in=/problems_dir/445985/tests/input:rw
+--dir=/app=/var/local/lib/isolate/0/box/submissionId:rw -i /in/01 -o /app/01 -M /app/meta --run -- /app/main
+*/
 
 func GetIsolateDir(i *domain.Isolate) string {
 	return IsolateRoot + strconv.Itoa(i.ID) + "/box"
@@ -34,18 +41,34 @@ func GetIsolateWorkingDir(submissionId string) string {
 	return submissionId + "/" + IsolateWorkingDirName
 }
 
+func GetSubmissionDir(i *domain.Isolate, submissionId string) string {
+	return GetIsolateDir(i) + "/" + submissionId
+}
+
+func GetMappedFileNamePath(fileName string) string {
+	return IsolateWorkingDirName + "/" + fileName
+}
+
 type IsolateServiceImpl struct {
 	problemService problem.ProblemService
 }
 
 func NewIsolateServiceImpl() (*IsolateServiceImpl, error) {
-	ps, err := problem.NewProblemService()
+	ps, err := impl.NewProblemService()
 	if err != nil {
 		return nil, err
 	}
 	return &IsolateServiceImpl{
 		problemService: ps,
 	}, nil
+}
+
+func NewIsolateService() (isolateservice.IsolateService, error) {
+	is, err := NewIsolateServiceImpl()
+	if err != nil {
+		return nil, err
+	}
+	return is, nil
 }
 
 type Task struct {
@@ -94,21 +117,33 @@ func (ir *IsolateServiceImpl) Init(i *domain.Isolate) error {
 }
 
 // This method added input directory to the run config, this also verify if the directory exists
-func (ir *IsolateServiceImpl) addInputMappedDir(rc *domain.RunConfig, problemId string, submissionId string) error {
-	inputDirAddr, err := ir.problemService.GetTestCaseDirAddr(problemId, impl.INPUT)
+func (ir *IsolateServiceImpl) addInputMappedDir(rc *domain.RunConfig, problemId string) error {
+	inputDirAddr, err := ir.problemService.GetTestCaseDirAddr(problemId, problem.INPUT)
 	if err != nil {
 		return err
 	}
 
 	rc.DirectoryMaps = append(rc.DirectoryMaps, domain.DirectoryMap{
-		Inside:  inputDirAddr,
-		Outside: GetIsolateInputDir(submissionId),
+		Inside:  IsolateInputDirName,
+		Outside: inputDirAddr,
 		Options: []domain.DirectoryMapOption{domain.AllowReadWrite},
 	})
 	return nil
 }
 
-func buildArgs(i *domain.Isolate, rc *domain.RunConfig) ([]string, error) {
+// This method added working directory to the run config, so access it only via /app which makes it easier to implement logic
+// This also map it's current working directory to itself
+func addWorkingMappedDir(i *domain.Isolate, rc *domain.RunConfig, submissionId string) {
+	workingDir := GetSubmissionDir(i, submissionId)
+
+	rc.DirectoryMaps = append(rc.DirectoryMaps, domain.DirectoryMap{
+		Inside:  IsolateWorkingDirName,
+		Outside: workingDir,
+		Options: []domain.DirectoryMapOption{domain.AllowReadWrite},
+	})
+}
+
+func buildArgs(i *domain.Isolate, rc domain.RunConfig) ([]string, error) {
 	args := []string{"isolate", "-b", strconv.Itoa(i.ID)}
 
 	if rc.MaxProcesses > 0 {
@@ -137,16 +172,52 @@ func buildArgs(i *domain.Isolate, rc *domain.RunConfig) ([]string, error) {
 		args = append(args, fmt.Sprintf("--wall-time=%d.%d", ms/1000, ms%1000))
 	}
 	if rc.MemoryLimit > 0 {
-		args = append(args, fmt.Sprintf("--cg-mem=%d", int(rc.MemoryLimit/memory.KiB)))
+		args = append(args, fmt.Sprintf("--mem=%d", int(rc.MemoryLimit/memory.KiB)))
 	}
+
+	if len(rc.Input) > 0 {
+		args = append(args, "-i")
+		args = append(args, rc.Input)
+	}
+
+	if len(rc.Output) > 0 {
+		args = append(args, "-o")
+		args = append(args, rc.Output)
+	}
+
+	if rc.Meta {
+		args = append(args, "-M")
+		args = append(args, IsolateWorkingDirName+"/"+IsolateMetaFileName)
+	}
+
+	args = append(args, rc.Args...)
 	return args, nil
 }
 
-func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc *domain.RunConfig, req *pkg.SubmissionRequest) error {
+func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest, toRun string, toRunArgs ...string) error {
+	i.Logger.Info().Msgf("Start running command!")
 
-	return nil
+	if !i.Inited {
+		return ErrorIsolateNotInitialized
+	}
+
+	addWorkingMappedDir(i, &rc, req.SubmissionId)
+	i.Logger.Info().Msgf("Run config: %v", rc)
+
+	args, err := buildArgs(i, rc)
+	if err != nil {
+		return err
+	}
+
+	args = append(args, "--run", "--", toRun)
+	i.Logger.Info().Msgf("To run args: %v", toRunArgs)
+	args = append(args, toRunArgs...)
+
+	i.Logger.Info().Msgf("Running command with args: %v", args)
+
+	return exec.Command(args[0], args[1:]...).Run()
 }
 
-func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, rc *domain.RunConfig, req *pkg.SubmissionRequest) error {
+func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest) error {
 	return nil
 }

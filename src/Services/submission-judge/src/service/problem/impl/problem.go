@@ -10,6 +10,7 @@ import (
 
 	"github.com/bibimoni/Online-judge/submission-judge/src/common"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
 )
 
 const PROBLEM_INFO_FILENAME = "problem.json"
@@ -28,14 +29,17 @@ func NewProblemServiceImpl() (*ProblemServiceImpl, error) {
 	}, nil
 }
 
-func (ps *ProblemServiceImpl) Get(ctx context.Context, id string) (*ProblemServiceGetOutput, error) {
+func NewProblemService() (problem.ProblemService, error) {
+	return NewProblemServiceImpl()
+}
+func (ps *ProblemServiceImpl) Get(ctx context.Context, id string) (*problem.ProblemServiceGetOutput, error) {
 	req := common.APIRequest{
 		Method:  "GET",
 		URL:     ps.problemServerAddr + "get/" + id + "/" + PROBLEM_INFO_FILENAME,
 		Timeout: 60 * time.Second,
 	}
 
-	result, err := common.SendRequest[ProblemServiceGetOutput](ctx, req)
+	result, err := common.SendRequest[problem.ProblemServiceGetOutput](ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +59,7 @@ func fileExsits(path string) (bool, error) {
 	}
 }
 
-func (ps *ProblemServiceImpl) GetTestCaseDirAddr(problemId string, tcType TestCaseType) (string, error) {
+func (ps *ProblemServiceImpl) GetTestCaseDirAddr(problemId string, tcType problem.TestCaseType) (string, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return "", err
@@ -63,9 +67,9 @@ func (ps *ProblemServiceImpl) GetTestCaseDirAddr(problemId string, tcType TestCa
 
 	stringAddr := cfg.ProblemsDir + "/" + problemId + "/tests"
 	switch tcType {
-	case INPUT:
+	case problem.INPUT:
 		stringAddr += "/input/"
-	case OUTPUT:
+	case problem.OUTPUT:
 		stringAddr += "/output/"
 	default:
 		return "", fmt.Errorf("Please provide either INPUT or OUTPUT for testcase type")
@@ -81,7 +85,7 @@ func (ps *ProblemServiceImpl) GetTestCaseDirAddr(problemId string, tcType TestCa
 	return stringAddr, nil
 }
 
-func (ps *ProblemServiceImpl) GetTestCaseAddr(problemId string, tcType TestCaseType, testNum int) (string, error) {
+func (ps *ProblemServiceImpl) GetTestCaseAddr(problemId string, tcType problem.TestCaseType, testNum int) (string, error) {
 	stringAddr, err := ps.GetTestCaseDirAddr(problemId, tcType)
 	if err != nil {
 		return "", err
@@ -119,22 +123,4 @@ func (ps *ProblemServiceImpl) GetCheckerAddr(problemId string) (string, error) {
 		return "", fmt.Errorf("This test file isn't available")
 	}
 	return stringAddr, nil
-}
-
-type TestCaseType string
-
-const (
-	INPUT  TestCaseType = "INPUT"
-	OUTPUT TestCaseType = "OUTPUT"
-)
-
-type ProblemServiceGetOutput struct {
-	ID          string   `json:"ID,omitempty"`
-	ProblemId   int64    `json:"problem-id,omitempty"`
-	Name        string   `json:"name,omitempty"`
-	ShortName   string   `json:"short-name,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
-	TestNum     int      `json:"test-num,omitempty"`
-	TimeLimit   int      `json:"time-limit,omitempty"`
-	MemoryLimit int64    `json:"memory-limit,omitempty"`
 }

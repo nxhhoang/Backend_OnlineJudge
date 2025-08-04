@@ -2,15 +2,17 @@ package interactor
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	// "strconv"
 
 	scr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode"
+	repository "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission"
 	sr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission"
-	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
-	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
+	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
+	isolatei "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
 	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
@@ -54,7 +56,7 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 
 	log.Info().Msgf("%v", problemInfo)
 
-	params := impl.CreateSubmissionInput{
+	params := repository.CreateSubmissionInput{
 		ProblemId:    strconv.FormatInt(problemInfo.ProblemId, 10),
 		Username:     input.Username,
 		Type:         input.SubmissionType,
@@ -66,12 +68,18 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 		return nil, err
 	}
 
-	req := pkg.SubmissionRequest{
+	is, err := isolatei.NewIsolateService()
+	if err != nil {
+		return nil, fmt.Errorf("Can't create new isolate service: %v", err)
+	}
+
+	req := isolateservice.SubmissionRequest{
 		SubmissionId:   submissionId,
 		Username:       input.Username,
 		Sourcecode:     input.Code,
 		SubmissionType: input.SubmissionType,
 		ProblemId:      input.ProblemId,
+		IService:       is,
 	}
 
 	lang, err := store.DefaultStore.Get(input.LanguageId)

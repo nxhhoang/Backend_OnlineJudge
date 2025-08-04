@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"io"
 	"time"
 
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
@@ -15,6 +16,14 @@ type RunConfig struct {
 	Env              []string
 	InheritEnv       bool
 	MaxProcesses     int
+	Input            string
+	Output           string
+	Meta             bool
+	Args             []string
+
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
 }
 
 type DirectoryMap struct {

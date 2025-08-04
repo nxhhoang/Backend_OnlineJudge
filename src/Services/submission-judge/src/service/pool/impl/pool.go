@@ -3,14 +3,26 @@ package impl
 import (
 	"errors"
 
+	"fmt"
+
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
+	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
 )
 
 type PoolServiceImpl struct {
 	pool           *domain.Pool
-	isolateService isolateservice.IsolateService
+	isolateService *isolateservice.IsolateService
+}
+
+func NewPoolSerivce() (poolservice.PoolService, error) {
+	poolService, err := NewPoolServiceImpl()
+	if err != nil {
+		return nil, fmt.Errorf("Error when create new Pool %v", err)
+	}
+	return poolService, nil
 }
 
 func NewPoolServiceImpl() (*PoolServiceImpl, error) {
@@ -19,7 +31,7 @@ func NewPoolServiceImpl() (*PoolServiceImpl, error) {
 		return nil, err
 	}
 
-	is, err := isolateservice.NewIsolateService()
+	is, err := impl.NewIsolateService()
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +40,7 @@ func NewPoolServiceImpl() (*PoolServiceImpl, error) {
 		pool: &domain.Pool{
 			Isolates: make(chan *domain.Isolate, cfg.Judge.Amount),
 		},
-		isolateService: is,
+		isolateService: &is,
 	}
 
 	log := config.GetLogger()

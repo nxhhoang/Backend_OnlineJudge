@@ -5,9 +5,9 @@ import (
 	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
 	"github.com/bibimoni/Online-judge/submission-judge/src/controller"
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
-	scr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode"
-	sr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission"
-	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
+	sci "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode/impl"
+	si "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
+	pi "github.com/bibimoni/Online-judge/submission-judge/src/service/problem/impl"
 	"github.com/bibimoni/Online-judge/submission-judge/src/usecase/submitsubmission/interactor"
 	"github.com/gin-gonic/gin"
 
@@ -21,9 +21,9 @@ func HandleSubmitSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc
 	log := config.GetLogger()
 
 	db := appContext.GetMainDbConnection()
-	submissionRepo := sr.NewSubmissionRepository(db)
-	sourcecodeRepo := scr.NewSourcecodeRepository(db)
-	problemSvc, err := problem.NewProblemService()
+	submissionRepo := si.NewSubmissionRepository(db)
+	sourcecodeRepo := sci.NewSourcecodeRepository(db)
+	problemSvc, err := pi.NewProblemService()
 	if err != nil {
 		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
+	repository "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -20,6 +21,10 @@ func NewSourcecodeRepositoryImpl(db *mongo.Database) *SourcecodeRepositoryImpl {
 	return &SourcecodeRepositoryImpl{
 		collection: db.Collection("Sourcecode"),
 	}
+}
+
+func NewSourcecodeRepository(db *mongo.Database) repository.SourcecodeRepository {
+	return NewSourcecodeRepositoryImpl(db)
 }
 
 func (sr *SourcecodeRepositoryImpl) CreateSourcecode(ctx context.Context, source string, languageId string) (string, error) {
