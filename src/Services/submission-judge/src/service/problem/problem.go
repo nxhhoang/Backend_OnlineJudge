@@ -11,6 +11,7 @@ type ProblemService interface {
 	GetTestCaseAddr(problemId string, tcType TestCaseType, testNum int) (string, error)
 	GetTestCaseDirAddr(problemId string, tcType TestCaseType) (string, error)
 	GetCheckerAddr(problemId string) (string, error)
+	GetAllTestcaseAddr(problemId string) ([]string, error)
 }
 
 type TestCaseType string

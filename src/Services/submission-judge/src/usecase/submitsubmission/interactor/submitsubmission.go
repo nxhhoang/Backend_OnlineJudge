@@ -13,9 +13,8 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
 	isolatei "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
-	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/judge"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
-	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submitsubmission"
 )
 
@@ -23,20 +22,20 @@ type SubmissionInteractor struct {
 	submissionRepo sr.SubmissionRepository
 	sourcecodeRepo scr.SourcecodeRepository
 	problemService problem.ProblemService
-	poolservice    *poolservice.PoolService
+	judgeService   judge.JudgeService
 }
 
 func NewSubmissionInteractor(
 	sr sr.SubmissionRepository,
 	scr scr.SourcecodeRepository,
 	ps problem.ProblemService,
-	pools *poolservice.PoolService,
+	js judge.JudgeService,
 ) *SubmissionInteractor {
 	return &SubmissionInteractor{
 		submissionRepo: sr,
 		sourcecodeRepo: scr,
 		problemService: ps,
-		poolservice:    pools,
+		judgeService:   js,
 	}
 }
 
@@ -80,23 +79,11 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 		SubmissionType: input.SubmissionType,
 		ProblemId:      input.ProblemId,
 		IService:       is,
+		LanguageId:     input.LanguageId,
 	}
 
-	lang, err := store.DefaultStore.Get(input.LanguageId)
-	if err != nil {
-		return nil, err
-	}
-
-	isolate, err := (*si.poolservice).Get()
-	if err != nil {
-		return nil, err
-	}
-
-	log.Info().Msgf("Isolate with id: %d, as been assigned to submission with id: %s", isolate.ID, submissionId)
-	err = lang.Judge(isolate, &req)
-	if err != nil {
-		return nil, err
-	}
+	// Run async
+	go si.judgeService.Judge(ctx, &req)
 
 	log.Info().Msgf("Enqueued submission successfully, id: %s", submissionId)
 

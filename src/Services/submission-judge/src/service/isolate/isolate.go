@@ -8,7 +8,6 @@ type IsolateService interface {
 	NewIsolate(id int) (*domain.Isolate, error)
 	Cleanup(i *domain.Isolate) error
 	Init(i *domain.Isolate) error
-	Judge(i *domain.Isolate, rc domain.RunConfig, req *SubmissionRequest) error
 	Run(i *domain.Isolate, rc domain.RunConfig, req *SubmissionRequest, toRun string, toRunArgs ...string) error
 }
 
@@ -19,4 +18,5 @@ type SubmissionRequest struct {
 	SubmissionType domain.SubmissionType
 	ProblemId      string
 	IService       IsolateService
+	LanguageId     string
 }

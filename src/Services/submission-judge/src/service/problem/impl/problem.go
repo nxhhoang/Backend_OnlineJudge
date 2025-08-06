@@ -2,15 +2,14 @@ package impl
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/bibimoni/Online-judge/submission-judge/src/common"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem/utils"
 )
 
 const PROBLEM_INFO_FILENAME = "problem.json"
@@ -32,6 +31,7 @@ func NewProblemServiceImpl() (*ProblemServiceImpl, error) {
 func NewProblemService() (problem.ProblemService, error) {
 	return NewProblemServiceImpl()
 }
+
 func (ps *ProblemServiceImpl) Get(ctx context.Context, id string) (*problem.ProblemServiceGetOutput, error) {
 	req := common.APIRequest{
 		Method:  "GET",
@@ -47,16 +47,6 @@ func (ps *ProblemServiceImpl) Get(ctx context.Context, id string) (*problem.Prob
 		return nil, fmt.Errorf("There is an error occured fetch requesting from PROBLEM SERVER")
 	}
 	return result, nil
-}
-
-func fileExsits(path string) (bool, error) {
-	if _, err := os.Stat(path); err == nil {
-		return true, nil
-	} else if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	} else {
-		return false, fmt.Errorf("An error occured when trying to verify if a file exists")
-	}
 }
 
 func (ps *ProblemServiceImpl) GetTestCaseDirAddr(problemId string, tcType problem.TestCaseType) (string, error) {
@@ -75,7 +65,7 @@ func (ps *ProblemServiceImpl) GetTestCaseDirAddr(problemId string, tcType proble
 		return "", fmt.Errorf("Please provide either INPUT or OUTPUT for testcase type")
 	}
 
-	stat, err := fileExsits(stringAddr)
+	stat, err := utils.FileExsits(stringAddr)
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +88,7 @@ func (ps *ProblemServiceImpl) GetTestCaseAddr(problemId string, tcType problem.T
 
 	stringAddr += conv
 
-	stat, err := fileExsits(stringAddr)
+	stat, err := utils.FileExsits(stringAddr)
 	if err != nil {
 		return "", err
 	}
@@ -115,7 +105,7 @@ func (ps *ProblemServiceImpl) GetCheckerAddr(problemId string) (string, error) {
 	}
 
 	stringAddr := cfg.ProblemsDir + "/" + problemId + "/checker"
-	stat, err := fileExsits(stringAddr)
+	stat, err := utils.FileExsits(stringAddr)
 	if err != nil {
 		return "", err
 	}
@@ -123,4 +113,8 @@ func (ps *ProblemServiceImpl) GetCheckerAddr(problemId string) (string, error) {
 		return "", fmt.Errorf("This test file isn't available")
 	}
 	return stringAddr, nil
+}
+
+func (ps *ProblemServiceImpl) GetAllTestcaseAddr(problemId string, problemInfo *problem.ProblemServiceGetOutput) ([]string, error) {
+
 }

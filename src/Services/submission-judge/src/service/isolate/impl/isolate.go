@@ -215,9 +215,9 @@ func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *i
 
 	i.Logger.Info().Msgf("Running command with args: %v", args)
 
-	return exec.Command(args[0], args[1:]...).Run()
-}
-
-func (ir *IsolateServiceImpl) Judge(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest) error {
-	return nil
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdin = rc.Stdin
+	cmd.Stdout = rc.Stdout
+	cmd.Stderr = rc.Stderr
+	return cmd.Run()
 }

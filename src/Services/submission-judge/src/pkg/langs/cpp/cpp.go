@@ -51,6 +51,8 @@ func (cpp Cpp) Judge(i *domain.Isolate, req *isolateservice.SubmissionRequest) e
 
 	err = cpp.Compile(i, req, &errBuf)
 
+	i.Logger.Debug().Msgf("Output: %s", errBuf.String())
+
 	if err != nil {
 		return err
 	}
