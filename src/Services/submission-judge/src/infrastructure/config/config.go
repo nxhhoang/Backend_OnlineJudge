@@ -32,7 +32,8 @@ type Config struct {
 		IDOffset int
 		Amount   int
 	}
-	ProblemsDir string
+	ProblemsDir    string
+	CheckerBinName string
 }
 
 func Load() (*Config, error) {
@@ -69,6 +70,8 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("Failed to parse env variable [SUBMISSION_JUDGE_ID_OFFSET] into int: %v", err)
 	}
 	cfg.Judge.IDOffset = judgeIdOffset
+
+	cfg.CheckerBinName = "checker"
 
 	return cfg, nil
 }

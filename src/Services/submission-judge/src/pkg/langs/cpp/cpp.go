@@ -1,7 +1,6 @@
 package cpp
 
 import (
-	"bytes"
 	"io"
 	"time"
 
@@ -10,13 +9,13 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
-	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/utils"
 )
 
 type Cpp struct {
 	id          string
 	name        string
 	compileArgs []string
+	needCompile bool
 }
 
 func (cpp Cpp) ID() string {
@@ -39,27 +38,16 @@ func (cpp Cpp) ExecutableName() string {
 	return "main"
 }
 
-func (cpp Cpp) Judge(i *domain.Isolate, req *isolateservice.SubmissionRequest) error {
-	_, err := utils.CreateSubmissionSourceFile(i, req.Sourcecode, req.SubmissionId, cpp.DefaultFileName())
-	if err != nil {
-		return err
-	}
+func (cpp Cpp) NeedCompile() bool {
+	return cpp.needCompile
+}
 
-	i.Logger.Info().Msgf("Created source file inside the isolate working directory")
-
-	var errBuf bytes.Buffer
-
-	err = cpp.Compile(i, req, &errBuf)
-
-	i.Logger.Debug().Msgf("Output: %s", errBuf.String())
-
-	if err != nil {
-		return err
-	}
+func (cpp Cpp) Run(i *domain.Isolate, req *isolateservice.SubmissionRequest) error {
 
 	return nil
 }
 
+// Compile file, make sure the file is present inside the isolate working directory
 func (cpp Cpp) Compile(i *domain.Isolate, req *isolateservice.SubmissionRequest, stderr io.Writer) error {
 	// compile
 	rc := domain.RunConfig{

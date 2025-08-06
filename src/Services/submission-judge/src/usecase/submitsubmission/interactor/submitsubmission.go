@@ -82,8 +82,7 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 		LanguageId:     input.LanguageId,
 	}
 
-	// Run async
-	go si.judgeService.Judge(ctx, &req)
+	si.judgeService.Judge(ctx, &req, problemInfo)
 
 	log.Info().Msgf("Enqueued submission successfully, id: %s", submissionId)
 

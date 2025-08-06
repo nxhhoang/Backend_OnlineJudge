@@ -114,7 +114,3 @@ func (ps *ProblemServiceImpl) GetCheckerAddr(problemId string) (string, error) {
 	}
 	return stringAddr, nil
 }
-
-func (ps *ProblemServiceImpl) GetAllTestcaseAddr(problemId string, problemInfo *problem.ProblemServiceGetOutput) ([]string, error) {
-
-}

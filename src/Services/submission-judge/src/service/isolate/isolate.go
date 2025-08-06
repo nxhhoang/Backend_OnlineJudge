@@ -1,8 +1,18 @@
 package isolateservice
 
 import (
+	"errors"
+
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 )
+
+// IsolateRoot is the root directory structure isolate is using.
+var IsolateRoot = "/var/local/lib/isolate/"
+var IsolateInputDirName = "in"
+var IsolateWorkingDirName = "app"
+var IsolateMetaFileName = "meta"
+
+var ErrorIsolateNotInitialized = errors.New("initialize the isolate first")
 
 type IsolateService interface {
 	NewIsolate(id int) (*domain.Isolate, error)

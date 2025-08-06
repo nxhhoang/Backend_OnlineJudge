@@ -13,6 +13,7 @@ type Language interface {
 	DefaultFileName() string
 	ExecutableName() string
 	FileExtension() string
-	Judge(i *domain.Isolate, req *isolateservice.SubmissionRequest) error
+	NeedCompile() bool
+	Run(i *domain.Isolate, req *isolateservice.SubmissionRequest) error
 	Compile(i *domain.Isolate, req *isolateservice.SubmissionRequest, stderr io.Writer) error
 }

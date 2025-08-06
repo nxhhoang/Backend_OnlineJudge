@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -12,42 +11,15 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/utils"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem/impl"
 )
-
-// IsolateRoot is the root directory structure isolate is using.
-var IsolateRoot = "/var/local/lib/isolate/"
-var IsolateInputDirName = "/in"
-var IsolateWorkingDirName = "/app"
-var IsolateMetaFileName = "/meta"
-
-var ErrorIsolateNotInitialized = errors.New("initialize the isolate first")
 
 /*
 isolate -b 0 --time=2 --mem=256000 --dir=/in=/problems_dir/445985/tests/input:rw
 --dir=/app=/var/local/lib/isolate/0/box/submissionId:rw -i /in/01 -o /app/01 -M /app/meta --run -- /app/main
 */
-
-func GetIsolateDir(i *domain.Isolate) string {
-	return IsolateRoot + strconv.Itoa(i.ID) + "/box"
-}
-
-func GetIsolateInputDir(submissionId string) string {
-	return submissionId + "/" + IsolateInputDirName
-}
-
-func GetIsolateWorkingDir(submissionId string) string {
-	return submissionId + "/" + IsolateWorkingDirName
-}
-
-func GetSubmissionDir(i *domain.Isolate, submissionId string) string {
-	return GetIsolateDir(i) + "/" + submissionId
-}
-
-func GetMappedFileNamePath(fileName string) string {
-	return IsolateWorkingDirName + "/" + fileName
-}
 
 type IsolateServiceImpl struct {
 	problemService problem.ProblemService
@@ -109,7 +81,7 @@ func (ir *IsolateServiceImpl) Init(i *domain.Isolate) error {
 	cmd := []string{"isolate", "--cg", "-b", strconv.Itoa(i.ID), "--init"}
 	i.Logger.Info().Msgf("Creating isolate... Running: %s", cmd)
 	i.Inited = true
-	i.BoxDir = filepath.Join(IsolateRoot, strconv.Itoa(i.ID))
+	i.BoxDir = filepath.Join(isolateservice.IsolateRoot, strconv.Itoa(i.ID))
 
 	log := config.GetLogger()
 	log.Info().Msgf("Inited isolate service with id: %d", i.ID)
@@ -124,7 +96,7 @@ func (ir *IsolateServiceImpl) addInputMappedDir(rc *domain.RunConfig, problemId 
 	}
 
 	rc.DirectoryMaps = append(rc.DirectoryMaps, domain.DirectoryMap{
-		Inside:  IsolateInputDirName,
+		Inside:  "/" + isolateservice.IsolateInputDirName,
 		Outside: inputDirAddr,
 		Options: []domain.DirectoryMapOption{domain.AllowReadWrite},
 	})
@@ -134,16 +106,19 @@ func (ir *IsolateServiceImpl) addInputMappedDir(rc *domain.RunConfig, problemId 
 // This method added working directory to the run config, so access it only via /app which makes it easier to implement logic
 // This also map it's current working directory to itself
 func addWorkingMappedDir(i *domain.Isolate, rc *domain.RunConfig, submissionId string) {
-	workingDir := GetSubmissionDir(i, submissionId)
+	workingDir := utils.GetSubmissionDir(i, submissionId)
 
 	rc.DirectoryMaps = append(rc.DirectoryMaps, domain.DirectoryMap{
-		Inside:  IsolateWorkingDirName,
+		Inside:  "/" + isolateservice.IsolateWorkingDirName,
 		Outside: workingDir,
 		Options: []domain.DirectoryMapOption{domain.AllowReadWrite},
 	})
 }
 
 func buildArgs(i *domain.Isolate, rc domain.RunConfig) ([]string, error) {
+	if !i.Inited {
+		return []string{}, isolateservice.ErrorIsolateNotInitialized
+	}
 	args := []string{"isolate", "-b", strconv.Itoa(i.ID)}
 
 	if rc.MaxProcesses > 0 {
@@ -187,7 +162,7 @@ func buildArgs(i *domain.Isolate, rc domain.RunConfig) ([]string, error) {
 
 	if rc.Meta {
 		args = append(args, "-M")
-		args = append(args, IsolateWorkingDirName+"/"+IsolateMetaFileName)
+		args = append(args, "/"+isolateservice.IsolateWorkingDirName+"/"+isolateservice.IsolateMetaFileName)
 	}
 
 	args = append(args, rc.Args...)
@@ -195,11 +170,11 @@ func buildArgs(i *domain.Isolate, rc domain.RunConfig) ([]string, error) {
 }
 
 func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest, toRun string, toRunArgs ...string) error {
-	i.Logger.Info().Msgf("Start running command!")
-
 	if !i.Inited {
-		return ErrorIsolateNotInitialized
+		return isolateservice.ErrorIsolateNotInitialized
 	}
+
+	i.Logger.Info().Msgf("Start running command!")
 
 	addWorkingMappedDir(i, &rc, req.SubmissionId)
 	i.Logger.Info().Msgf("Run config: %v", rc)
@@ -219,5 +194,6 @@ func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *i
 	cmd.Stdin = rc.Stdin
 	cmd.Stdout = rc.Stdout
 	cmd.Stderr = rc.Stderr
+
 	return cmd.Run()
 }

@@ -25,7 +25,7 @@ func HandleSubmitSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc
 	submissionRepo := si.NewSubmissionRepository(db)
 	sourcecodeRepo := sci.NewSourcecodeRepository(db)
 	problemSvc, err := pi.NewProblemService()
-	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool())
+	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool(), problemSvc)
 	if err != nil {
 		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil
