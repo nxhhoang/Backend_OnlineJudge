@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	database "contest/internal/infrastructure/database"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,6 +27,10 @@ func main() {
 	if host == "" {
 		log.Print("Can't get host address")
 		return
+	}
+
+	if err := database.GetMongoDbClient(); err != nil {
+		panic(err)
 	}
 
 	serverAddr := host + ":" + port

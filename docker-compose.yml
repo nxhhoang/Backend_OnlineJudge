@@ -75,10 +75,26 @@ services:
     container_name: contest
     ports:
       - '2000:2000'
+    depends_on:
+      - contestmongodb
     env_file:
       - ./.env
     volumes:
       - ./src/Services/contest:/app
+    networks:
+      - online-judge-network
+  contestmongodb:
+    image: mongo
+    container_name: contest-mongo
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: contest-db
+    ports:
+      - '47017:27017'
+    volumes:
+      - ./contest-db-data:/data/db
     networks:
       - online-judge-network
 networks:
