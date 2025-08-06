@@ -13,3 +13,12 @@ type Problem struct {
 	TimeLimit   uint64 `json:"time-limit" bson:"time-limit"`
 	MemoryLimit uint64 `json:"memory-limit" bson:"memory-limit"`
 }
+
+type Package struct {
+	ID                  uint64 `json:"id"`
+	Revision            uint64 `json:"revision"`
+	CreationTimeSeconds uint64 `json:"creationTimeSeconds"`
+	State               string `json:"state"`
+	Comment             string `json:"comment"`
+	Type                string `json:"type"`
+}

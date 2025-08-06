@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"problem/models"
-	"problem/utils"
+	"problem/utils/polygon"
 )
 
 /*
@@ -18,9 +18,14 @@ FUTURE:
 - Automatically get the latest package of the problem
 */
 
-func AddProblem(ProblemId uint64, PackageId uint64) error {
-	err := utils.DownloadPackage(ProblemId, PackageId)
+func AddProblem(ProblemId uint64) error {
+	var PackageId uint64
+	PackageId, err := polygon.GetLastestPackage(ProblemId)
 	if err != nil {
+		return err
+	}
+
+	if err := polygon.DownloadPackage(ProblemId, PackageId); err != nil {
 		return err
 	}
 
@@ -35,9 +40,9 @@ func AddProblem(ProblemId uint64, PackageId uint64) error {
 		return err
 	}
 
-	if _, err := db.Database("Problems").Collection("Problems").InsertOne(ctx, problem); err != nil {
-		return err
-	}
+	// if _, err := db.Database("Problems").Collection("Problems").InsertOne(ctx, problem); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
