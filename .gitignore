@@ -1,3 +1,4 @@
 .env
 submission-judge-db-data/
 problem-db-data/
+contest-db-data/
