@@ -49,7 +49,11 @@ func (sr *SourcecodeRepositoryImpl) CreateSourcecode(ctx context.Context, source
 
 func (sr *SourcecodeRepositoryImpl) GetSourcecode(ctx context.Context, id string) (*domain.SourceCode, error) {
 	var returnSourceCode *domain.SourceCode
-	err := sr.collection.FindOne(ctx, bson.M{"_id": id}).Decode(returnSourceCode)
+	bid, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	err = sr.collection.FindOne(ctx, bson.M{"_id": bid}).Decode(returnSourceCode)
 	if err != nil {
 		return nil, err
 	}

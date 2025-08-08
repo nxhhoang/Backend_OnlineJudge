@@ -7,10 +7,12 @@ import (
 
 	// "strconv"
 
+	evalRepo "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/evaluation"
 	scr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode"
 	repository "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission"
 	sr "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
+	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
 	isolatei "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/judge"
@@ -23,6 +25,7 @@ type SubmissionInteractor struct {
 	sourcecodeRepo scr.SourcecodeRepository
 	problemService problem.ProblemService
 	judgeService   judge.JudgeService
+	evalRepo       evalRepo.EvaluationRepository
 }
 
 func NewSubmissionInteractor(
@@ -30,12 +33,14 @@ func NewSubmissionInteractor(
 	scr scr.SourcecodeRepository,
 	ps problem.ProblemService,
 	js judge.JudgeService,
+	er evalRepo.EvaluationRepository,
 ) *SubmissionInteractor {
 	return &SubmissionInteractor{
 		submissionRepo: sr,
 		sourcecodeRepo: scr,
 		problemService: ps,
 		judgeService:   js,
+		evalRepo:       er,
 	}
 }
 
@@ -67,6 +72,11 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 		return nil, err
 	}
 
+	evalId, err := si.evalRepo.CreateEval(ctx, submissionId, problemInfo.TimeLimit, memory.Memory(problemInfo.MemoryLimit), problemInfo.TestNum)
+	if err != nil {
+		return nil, err
+	}
+
 	is, err := isolatei.NewIsolateService()
 	if err != nil {
 		return nil, fmt.Errorf("Can't create new isolate service: %v", err)
@@ -80,11 +90,11 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 		ProblemId:      input.ProblemId,
 		IService:       is,
 		LanguageId:     input.LanguageId,
+		EvalId:         evalId,
 	}
 
+	log.Info().Msgf("Enqueue submission, id: %s. With eval id: %s", submissionId, evalId)
 	si.judgeService.Judge(ctx, &req, problemInfo)
-
-	log.Info().Msgf("Enqueued submission successfully, id: %s", submissionId)
 
 	return &usecase.SubmitSubmissionResponse{
 		// ID: codeId,

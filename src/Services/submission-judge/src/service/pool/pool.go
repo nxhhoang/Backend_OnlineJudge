@@ -7,4 +7,5 @@ import (
 type PoolService interface {
 	Get() (*domain.Isolate, error)
 	Put(i *domain.Isolate)
+	Len() int
 }

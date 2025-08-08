@@ -8,7 +8,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
-	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/utils"
 )
 
 type Cpp struct {
@@ -39,7 +39,7 @@ func (cpp Cpp) ExecutableName() string {
 }
 
 func (cpp Cpp) NeedCompile() bool {
-	return cpp.needCompile
+	return true
 }
 
 func (cpp Cpp) Run(i *domain.Isolate, req *isolateservice.SubmissionRequest) error {
@@ -57,13 +57,14 @@ func (cpp Cpp) Compile(i *domain.Isolate, req *isolateservice.SubmissionRequest,
 		InheritEnv:   true,
 		Stdout:       stderr,
 		Stderr:       stderr,
+		Meta:         true,
 	}
 
 	runArgs := cpp.compileArgs
 	runArgs = append(runArgs, []string{
-		impl.GetMappedFileNamePath(cpp.DefaultFileName()),
+		utils.GetMappedFileNamePath(cpp.DefaultFileName()),
 		"-o",
-		impl.GetMappedFileNamePath(cpp.ExecutableName()),
+		utils.GetMappedFileNamePath(cpp.ExecutableName()),
 	}...)
 
 	i.Logger.Info().Msgf("Start compiling source code with id: %s", req.SubmissionId)

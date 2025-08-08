@@ -29,4 +29,5 @@ type SubmissionRequest struct {
 	ProblemId      string
 	IService       IsolateService
 	LanguageId     string
+	EvalId         string
 }

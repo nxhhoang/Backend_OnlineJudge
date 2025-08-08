@@ -71,3 +71,7 @@ func (ps *PoolServiceImpl) Get() (*domain.Isolate, error) {
 func (ps *PoolServiceImpl) Put(i *domain.Isolate) {
 	ps.pool.Isolates <- i
 }
+
+func (ps *PoolServiceImpl) Len() int {
+	return len(ps.pool.Isolates)
+}

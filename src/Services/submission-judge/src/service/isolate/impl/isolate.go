@@ -115,7 +115,7 @@ func addWorkingMappedDir(i *domain.Isolate, rc *domain.RunConfig, submissionId s
 	})
 }
 
-func buildArgs(i *domain.Isolate, rc domain.RunConfig) ([]string, error) {
+func buildArgs(i *domain.Isolate, rc domain.RunConfig, submissionId string) ([]string, error) {
 	if !i.Inited {
 		return []string{}, isolateservice.ErrorIsolateNotInitialized
 	}
@@ -162,7 +162,7 @@ func buildArgs(i *domain.Isolate, rc domain.RunConfig) ([]string, error) {
 
 	if rc.Meta {
 		args = append(args, "-M")
-		args = append(args, "/"+isolateservice.IsolateWorkingDirName+"/"+isolateservice.IsolateMetaFileName)
+		args = append(args, utils.GetSubmissionDir(i, submissionId)+"/"+isolateservice.IsolateMetaFileName)
 	}
 
 	args = append(args, rc.Args...)
@@ -177,9 +177,10 @@ func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *i
 	i.Logger.Info().Msgf("Start running command!")
 
 	addWorkingMappedDir(i, &rc, req.SubmissionId)
+	ir.addInputMappedDir(&rc, req.ProblemId)
 	i.Logger.Info().Msgf("Run config: %v", rc)
 
-	args, err := buildArgs(i, rc)
+	args, err := buildArgs(i, rc, req.SubmissionId)
 	if err != nil {
 		return err
 	}
