@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"os"
+	"strconv"
+	"time"
 
+	repository "contest/domain/repository/contest/impl"
 	database "contest/internal/infrastructure/database"
 
 	"github.com/gofiber/fiber/v2"
@@ -32,6 +36,49 @@ func main() {
 	if err := database.GetMongoDbClient(); err != nil {
 		panic(err)
 	}
+
+	app.Post("/create", func(c *fiber.Ctx) error {
+		cr := repository.NewContestRepository(database.Db)
+
+		var cancel context.CancelFunc
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		_, err := cr.Create(ctx, 1)
+		if err != nil {
+			return c.Status(500).SendString(err.Error())
+		}
+
+		log.Info().Msg("New contest created")
+
+		return c.SendString("New contest created")
+	})
+
+	app.Post("add_author", func(c *fiber.Ctx) error {
+		var authorId int
+		var contestId string
+		var err error
+
+		authorId, err = (strconv.Atoi(c.Query("author_id", "")))
+		if err != nil {
+			return err
+		}
+		if authorId == 0 {
+			return c.Status(400).SendString("missing required parameter: author_id")
+		}
+
+		contestId = c.Query("contest_id", "")
+		if contestId == "" {
+			return c.Status(400).SendString("missing required parameter: contest_id")
+		}
+
+		cr := repository.NewContestRepository(database.Db)
+		if err := cr.AddAuthor(contestId, uint64(authorId)); err != nil {
+			return err
+		}
+
+		return c.SendStatus(200)
+	})
 
 	serverAddr := host + ":" + port
 	app.Listen(serverAddr)

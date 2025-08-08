@@ -12,7 +12,7 @@ import (
 
 var (
 	ctx context.Context
-	db  *mongo.Client
+	Db  *mongo.Database
 )
 
 func GetMongoDbClient() error {
@@ -39,7 +39,7 @@ func GetMongoDbClient() error {
 		return fmt.Errorf("could not ping MongoDB: %w", err)
 	}
 
-	db = client
+	Db = client.Database("Contest")
 
 	return nil
 }
