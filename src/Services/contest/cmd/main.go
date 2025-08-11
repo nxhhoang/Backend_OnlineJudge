@@ -44,14 +44,23 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		_, err := cr.Create(ctx, 1)
+		var authorId uint64
+		var err error
+		if authorId, err = strconv.ParseUint(c.Query("author-id", "0"), 10, 64); err != nil {
+			return c.Status(500).SendString(err.Error())
+		}
+		if authorId == 0 {
+			return c.Status(400).SendString("author-id is required")
+		}
+
+		contestId, err := cr.Create(ctx, authorId)
 		if err != nil {
 			return c.Status(500).SendString(err.Error())
 		}
 
-		log.Info().Msg("New contest created")
-
-		return c.SendString("New contest created")
+		return c.JSON(map[string]interface{}{
+			"contest-id": contestId,
+		})
 	})
 
 	app.Post("add_author", func(c *fiber.Ctx) error {
