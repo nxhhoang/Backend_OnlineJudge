@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/zavitax/sortedset-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -28,7 +29,7 @@ func NewContestRepository(db *mongo.Database) repository.ContestRepository {
 	return NewContestRepositoryImpl(db)
 }
 
-func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (uint64, error) {
+func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (string, error) {
 	newContest := domain.Contest{
 		Id:          uuid.NewString(),
 		Name:        "",
@@ -37,7 +38,7 @@ func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (uin
 		Authors:     []string{},
 		Curators:    []string{},
 		Testers:     []string{},
-		Contestants: []domain.Contestant{},
+		Contestants: sortedset.New[uint64, uint64, uint64](),
 
 		ProblemLabels: []string{},
 		Problems:      []uint64{},
@@ -50,10 +51,12 @@ func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (uin
 
 	_, err := cr.collection.InsertOne(ctx, newContest)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
-	return 0, nil
+	log.Info().Msgf("New contest created, id : %s", newContest.Id)
+
+	return newContest.Id, nil
 }
 
 func (cr *ContestRepositoryImpl) GetById(ctx context.Context, c *domain.Contest) (*domain.Contest, error) {

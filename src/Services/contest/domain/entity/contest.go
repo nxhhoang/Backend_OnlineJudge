@@ -3,6 +3,8 @@ package domain
 import (
 	"fmt"
 	"time"
+
+	"github.com/zavitax/sortedset-go"
 )
 
 const (
@@ -20,10 +22,10 @@ type Contest struct {
 	Name        string `bson:"name"`
 	Description string `bson:"description"`
 
-	Authors     []string     `bson:"authors"`
-	Curators    []string     `bson:"curators"`
-	Testers     []string     `bson:"testers"`
-	Contestants []Contestant `bson:"contestants"`
+	Authors     []string                                     `bson:"authors"`
+	Curators    []string                                     `bson:"curators"`
+	Testers     []string                                     `bson:"testers"`
+	Contestants *sortedset.SortedSet[uint64, uint64, uint64] `bson:"contestants"`
 
 	ProblemLabels []string `bson:"problem_labels"`
 	Problems      []uint64 `bson:"problems"`
