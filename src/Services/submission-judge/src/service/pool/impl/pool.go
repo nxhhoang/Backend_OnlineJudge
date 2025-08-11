@@ -51,7 +51,10 @@ func NewPoolServiceImpl() (*PoolServiceImpl, error) {
 		if err != nil {
 			return nil, err
 		}
-		is.Init(newIsolate)
+		err = is.Init(newIsolate)
+		// if err != nil {
+		// 	return nil, err
+		// }
 		newPool.Put(newIsolate)
 	}
 

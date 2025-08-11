@@ -3,11 +3,15 @@ package judgeutils
 import (
 	"bufio"
 	"bytes"
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
+	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/utils"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/judge"
 	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
 )
@@ -36,6 +40,8 @@ func ParseMetaFile(data []byte) (*judge.RunVerdict, error) {
 
 		key := strings.TrimSpace(parts[0])
 		val := strings.TrimSpace(parts[1])
+		log := config.GetLogger()
+		log.Debug().Msgf("Key: %s - Val: %s", key, val)
 
 		switch key {
 		case "status":
@@ -64,7 +70,7 @@ func ParseMetaFile(data []byte) (*judge.RunVerdict, error) {
 			}
 		case "max-rss":
 			if rss, err := strconv.Atoi(val); err == nil {
-				verdict.MaxRss = rss
+				verdict.MaxRss = memory.KiB * memory.Memory(rss)
 			}
 		case "csw":
 			if csw, err := strconv.Atoi(val); err == nil {
@@ -87,4 +93,18 @@ func ParseMetaFile(data []byte) (*judge.RunVerdict, error) {
 		}
 	}
 	return verdict, scanner.Err()
+}
+
+func CheckRunStatus(i *domain.Isolate, submissionId string) (*judge.RunVerdict, error) {
+	metaAddr, err := utils.GetMetaFilePath(i, submissionId)
+	if err != nil {
+		return nil, err
+	}
+
+	meta, err := os.ReadFile(metaAddr)
+	if err != nil {
+		return nil, fmt.Errorf("Can't open meta file: %v", err)
+	}
+
+	return ParseMetaFile(meta)
 }

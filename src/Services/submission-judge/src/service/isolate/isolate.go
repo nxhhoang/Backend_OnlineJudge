@@ -19,6 +19,7 @@ type IsolateService interface {
 	Cleanup(i *domain.Isolate) error
 	Init(i *domain.Isolate) error
 	Run(i *domain.Isolate, rc domain.RunConfig, req *SubmissionRequest, toRun string, toRunArgs ...string) error
+	RunBinary(i *domain.Isolate, rc domain.RunConfig, req *SubmissionRequest, exeName string) error
 }
 
 type SubmissionRequest struct {

@@ -84,7 +84,7 @@ func (ir *IsolateServiceImpl) Init(i *domain.Isolate) error {
 	i.BoxDir = filepath.Join(isolateservice.IsolateRoot, strconv.Itoa(i.ID))
 
 	log := config.GetLogger()
-	log.Info().Msgf("Inited isolate service with id: %d", i.ID)
+	log.Info().Msgf("Trying to tnit isolate service with id: %d", i.ID)
 	return exec.Command(cmd[0], cmd[1:]...).Run()
 }
 
@@ -169,12 +169,15 @@ func buildArgs(i *domain.Isolate, rc domain.RunConfig, submissionId string) ([]s
 	return args, nil
 }
 
+func (ir *IsolateServiceImpl) RunBinary(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest, exeName string) error {
+	return ir.Run(i, rc, req, "/"+isolateservice.IsolateWorkingDirName+"/"+exeName)
+}
+
 func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest, toRun string, toRunArgs ...string) error {
 	if !i.Inited {
 		return isolateservice.ErrorIsolateNotInitialized
 	}
-
-	i.Logger.Info().Msgf("Start running command!")
+	i.Logger.Info().Msgf("Start running command!, toRun: %s", toRun)
 
 	addWorkingMappedDir(i, &rc, req.SubmissionId)
 	ir.addInputMappedDir(&rc, req.ProblemId)

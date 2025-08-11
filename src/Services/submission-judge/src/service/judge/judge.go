@@ -25,7 +25,7 @@ type RunVerdict struct {
 	TimeWall       float64       `json:"time-wall"`
 	CgMem          memory.Memory `json:"cg-mem"`
 	CgMemSw        memory.Memory `json:"cg-mem-sw"`
-	MaxRss         int           `json:"max-rss"`
+	MaxRss         memory.Memory `json:"max-rss"`
 	Csw            int           `json:"csw"`
 	CswForced      int           `json:"csw-forced"`
 	CgOomKilled    int           `json:"cg-oom-killed"`

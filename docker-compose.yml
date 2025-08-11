@@ -31,17 +31,17 @@ services:
       - ./submission-judge-db-data:/data/db
     networks:
       - online-judge-network
-  redissubmissionjudge:
-    container_name: redis-submission-judge
-    image: redis
-    restart: always
-    ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass root
-    networks:
-      - online-judge-network
-    volumes:
-      - ./redis-submission-judge:/data
+  # redissubmissionjudge:
+  #   container_name: redis-submission-judge
+  #   image: redis
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   command: redis-server --save 20 1 --loglevel warning --requirepass root
+  #   networks:
+  #     - online-judge-network
+  #   volumes:
+  #     - ./redis-submission-judge:/data
   gateway:
     container_name: gateway-app 
     build:

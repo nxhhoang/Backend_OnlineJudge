@@ -81,14 +81,12 @@ func (ps *ProblemServiceImpl) GetTestCaseAddr(problemId string, tcType problem.T
 		return "", err
 	}
 
-	conv := strconv.Itoa(testNum)
-	if len(conv) == 1 {
-		conv = "0" + conv
-	}
-
-	stringAddr += conv
+	stringAddr += strconv.Itoa(testNum)
 
 	stat, err := utils.FileExsits(stringAddr)
+	log := config.GetLogger()
+	log.Debug().Msgf("string address: %s", stringAddr)
+
 	if err != nil {
 		return "", err
 	}

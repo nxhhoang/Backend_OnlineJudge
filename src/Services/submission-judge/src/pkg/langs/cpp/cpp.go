@@ -42,9 +42,13 @@ func (cpp Cpp) NeedCompile() bool {
 	return true
 }
 
-func (cpp Cpp) Run(i *domain.Isolate, req *isolateservice.SubmissionRequest) error {
+// Run cpp file, which is a binary file, make sure it's present in the isolate working directory
+func (cpp Cpp) Run(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.SubmissionRequest) error {
+	i.Logger.Info().Msgf("Start running source code with id: %s", req.SubmissionId)
 
-	return nil
+	return req.IService.RunBinary(
+		i, *rc, req, cpp.ExecutableName(),
+	)
 }
 
 // Compile file, make sure the file is present inside the isolate working directory
