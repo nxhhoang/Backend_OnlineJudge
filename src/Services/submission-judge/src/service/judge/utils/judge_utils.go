@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
-	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/utils"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/judge"
@@ -40,8 +39,8 @@ func ParseMetaFile(data []byte) (*judge.RunVerdict, error) {
 
 		key := strings.TrimSpace(parts[0])
 		val := strings.TrimSpace(parts[1])
-		log := config.GetLogger()
-		log.Debug().Msgf("Key: %s - Val: %s", key, val)
+		// log := config.GetLogger()
+		// log.Debug().Msgf("Key: %s - Val: %s", key, val)
 
 		switch key {
 		case "status":

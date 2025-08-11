@@ -119,6 +119,7 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 			}
 			return err
 		}
+
 		switch vert.Status {
 		case "RE", "SG", "TO", "XX":
 			var msg string
@@ -127,11 +128,12 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 			} else {
 				msg = vert.Message
 			}
-			err := js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.COMPILATION_ERROR, vert.Time, vert.MaxRss, 0, 0, msg)
+			err = js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.COMPILATION_ERROR, vert.Time, vert.MaxRss, 0, 0, msg)
 			if err != nil {
 				i.Logger.Error().Msgf("Database error, can't update verdict: %v", err)
 			}
 			err = judge.CompilationError
+			i.Logger.Debug().Msgf("Compile error: %v", err)
 		default:
 			// This is just to detect if the program failed to compile via the information given by the meta file,
 			// this is basically hardcoding and i might have to find a way to make this cleaner
@@ -143,13 +145,22 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 				err = judge.JugdgementFailed
 			}
 		}
+
+		i.Logger.Debug().Msgf("Compile error: %v", err)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Prepare the checker file
-	checkerLocation, err := js.problemService.GetCheckerAddr(req.ProblemId)
+	checkerLocation, e := js.problemService.GetCheckerAddr(req.ProblemId)
+	if e != nil {
+		err = js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, vert.Time, vert.MaxRss, 0, 0, vert.Message)
+		if err != nil {
+			i.Logger.Error().Msgf("Database error, can't update verdict: %v", err)
+		}
+		return e
+	}
 	err = utils.CopyChecker(i, (*req).SubmissionId, checkerLocation)
 	if err != nil {
 		return err
@@ -173,10 +184,11 @@ func (js *JudgeServiceImpl) JudgeICPC(ctx context.Context, i *domain.Isolate, la
 	)
 
 	for tc := 1; tc <= problemInfo.TestNum; tc += 1 {
-		tcInputAddr, err := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.INPUT), tc)
+		tcInputAddr, e := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.INPUT), tc)
+		err = e
 		if err != nil {
 			i.Logger.Debug().Msgf("Error when fetching testcase: %v", err)
-			err := js.evalRepo.UpdateVerdict(ctx, req.EvalId, domain.JUDGEMENT_FAILED)
+			err = js.evalRepo.UpdateVerdict(ctx, req.EvalId, domain.JUDGEMENT_FAILED)
 			if err != nil {
 				i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
 			}
@@ -185,12 +197,15 @@ func (js *JudgeServiceImpl) JudgeICPC(ctx context.Context, i *domain.Isolate, la
 
 		outaddr := utils.GetSubmissionDir(i, req.SubmissionId) + "/output_" + strconv.Itoa(tc)
 		i.Logger.Debug().Msgf("Output dir: %s", outaddr)
-		fout, err := os.Create(outaddr)
+		fout, e := os.Create(outaddr)
+		err = e
 		if err != nil {
 			i.Logger.Panic().Msgf("Error occured when trying to create new output file: %v", err)
+
 		}
 
-		fin, err := os.Open(tcInputAddr)
+		fin, e := os.Open(tcInputAddr)
+		err = e
 		if err != nil {
 			i.Logger.Panic().Msgf("Error occured when trying to read input file: %v", err)
 		}
@@ -208,7 +223,8 @@ func (js *JudgeServiceImpl) JudgeICPC(ctx context.Context, i *domain.Isolate, la
 		lang.Run(i, &rc, req)
 		fin.Close()
 
-		vert, err := judgeutils.CheckRunStatus(i, req.SubmissionId)
+		vert, e := judgeutils.CheckRunStatus(i, req.SubmissionId)
+		err = e
 
 		i.Logger.Debug().Msgf("Run Status from MetaFile: %v", vert)
 		if err != nil {
@@ -222,18 +238,21 @@ func (js *JudgeServiceImpl) JudgeICPC(ctx context.Context, i *domain.Isolate, la
 		curCpuTime = max(curCpuTime, vert.Time)
 		curMemoryUsage = max(curMemoryUsage, vert.MaxRss)
 
-		tcAnsAddtr, err := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.OUTPUT), tc)
+		tcAnsAddtr, e := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.OUTPUT), tc)
+		err = e
 		if err != nil {
 			err = js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, curCpuTime, curMemoryUsage, 0, 0, vert.Message)
 			return err
 		}
-		checkerLocation, err := js.problemService.GetCheckerAddr(req.ProblemId)
+		checkerLocation, e := js.problemService.GetCheckerAddr(req.ProblemId)
+		err = e
 		if err != nil {
 			err = js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, curCpuTime, curMemoryUsage, 0, 0, vert.Message)
 			return err
 		}
 
-		cvert, msg, err := js.checkVerdict(vert, checkerLocation, tcInputAddr, outaddr, tcAnsAddtr)
+		cvert, msg, e := js.checkVerdict(vert, checkerLocation, tcInputAddr, outaddr, tcAnsAddtr)
+		err = e
 		if err != nil {
 			err = js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, curCpuTime, curMemoryUsage, 0, 0, vert.Message)
 			return err
