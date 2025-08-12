@@ -1,18 +1,34 @@
 package isolateservice
 
 import (
+	"errors"
+
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
-	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
 )
+
+// IsolateRoot is the root directory structure isolate is using.
+var IsolateRoot = "/var/local/lib/isolate/"
+var IsolateInputDirName = "in"
+var IsolateWorkingDirName = "app"
+var IsolateMetaFileName = "meta"
+
+var ErrorIsolateNotInitialized = errors.New("initialize the isolate first")
 
 type IsolateService interface {
 	NewIsolate(id int) (*domain.Isolate, error)
 	Cleanup(i *domain.Isolate) error
 	Init(i *domain.Isolate) error
-	Judge(i *domain.Isolate, rc *domain.RunConfig)
-	RunBinary(i *domain.Isolate, rc *domain.RunConfig)
+	Run(i *domain.Isolate, rc domain.RunConfig, req *SubmissionRequest, toRun string, toRunArgs ...string) error
+	RunBinary(i *domain.Isolate, rc domain.RunConfig, req *SubmissionRequest, exeName string) error
 }
 
-func NewIsolateService() IsolateService {
-	return impl.NewIsolateServiceImpl()
+type SubmissionRequest struct {
+	SubmissionId   string
+	Username       string
+	Sourcecode     string
+	SubmissionType domain.SubmissionType
+	ProblemId      string
+	IService       IsolateService
+	LanguageId     string
+	EvalId         string
 }

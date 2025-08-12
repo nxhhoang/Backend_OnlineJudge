@@ -31,17 +31,17 @@ services:
       - ./submission-judge-db-data:/data/db
     networks:
       - online-judge-network
-  redissubmissionjudge:
-    container_name: redis-submission-judge
-    image: redis
-    restart: always
-    ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass root
-    networks:
-      - online-judge-network
-    volumes:
-      - ./redis-submission-judge:/data
+  # redissubmissionjudge:
+  #   container_name: redis-submission-judge
+  #   image: redis
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   command: redis-server --save 20 1 --loglevel warning --requirepass root
+  #   networks:
+  #     - online-judge-network
+  #   volumes:
+  #     - ./redis-submission-judge:/data
   gateway:
     container_name: gateway-app 
     build:
@@ -84,33 +84,33 @@ services:
       - ./problem-db-data:/data/db
     networks:
       - online-judge-network
-  auth-app:
-    build: ./src/Services/auth-v2/
-    ports:
-      - "50051:50051"
-    depends_on:
-      - mypostgres
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@mypostgres:5432/auth_db?schema=public
-      - JWT_SECRET=your_jwt_secret
-    volumes:
-      - ./src/Services/auth-v2:/app
-      - /app/node_modules
-    networks:
-      - online-judge-network
-  mypostgres:
-    image: postgres:latest
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=auth_db
-    volumes:
-      - ./postgres-data:/var/lib/postgresql/data
-    networks:
-      - online-judge-network
+  # auth-app:
+  #   build: ./src/Services/auth-v2/
+  #   ports:
+  #     - "50051:50051"
+  #   depends_on:
+  #     - mypostgres
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgresql://postgres:postgres@mypostgres:5432/auth_db?schema=public
+  #     - JWT_SECRET=your_jwt_secret
+  #   volumes:
+  #     - ./src/Services/auth-v2:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - online-judge-network
+  # mypostgres:
+  #   image: postgres:latest
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=auth_db
+  #   volumes:
+  #     - ./postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - online-judge-network
 networks:
   online-judge-network:
     driver: bridge
