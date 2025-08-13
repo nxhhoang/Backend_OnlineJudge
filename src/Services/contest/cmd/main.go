@@ -8,8 +8,10 @@ import (
 
 	repository "contest/domain/repository/contest/impl"
 	database "contest/internal/infrastructure/database"
+	infrastructure "contest/internal/infrastructure/redis"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -36,6 +38,17 @@ func main() {
 	if err := database.GetMongoDbClient(); err != nil {
 		panic(err)
 	}
+
+	if err := infrastructure.GetRedisClient(); err != nil {
+		panic(err)
+	}
+
+	app.Use("/ws", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
 
 	app.Post("/create", func(c *fiber.Ctx) error {
 		cr := repository.NewContestRepository(database.Db)

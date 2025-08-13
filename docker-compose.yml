@@ -77,6 +77,7 @@ services:
       - '2000:2000'
     depends_on:
       - contestmongodb
+      - scoreboard_redis
     env_file:
       - ./.env
     volumes:
@@ -95,6 +96,16 @@ services:
       - '47017:27017'
     volumes:
       - ./contest-db-data:/data/db
+    networks:
+      - online-judge-network
+  scoreboard_redis:
+    image: redis
+    container_name: scoreboard_redis
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - ./scoreboard_redis:/data
     networks:
       - online-judge-network
 networks:
