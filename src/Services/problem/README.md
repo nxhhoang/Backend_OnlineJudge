@@ -1,24 +1,27 @@
+# Problem service
 
 ## API Schema
-- POST /problem/add?problemId=...&?packageId=...
-- GET /problem/get/${problemId}/ 
-
-#### Problem directory structure
 ```
-+-- problem.json // simple version with only needed properties
-+-- statement.pdf // haven't implemented yet
-+-- checker // haven't implemented yet
+- POST /problem/add?problemId=...
+- GET /problem/get/${problemId}/{static files}
+```
+
+### Problem directory structure
+```
++-- problem.json
++-- statement.pdf
++-- checker
 +-- tests/
 |   +-- input/
-|   |   +-- 01
-|   |   +-- 02
+|   |   +-- 1
+|   |   +-- 2
 |   |   +-- ...
 |   +-- output/
-|   |   +-- 01
-|   |   +-- 02
+|   |   +-- 1
+|   |   +-- 2
 |   |   +-- ...
 ```
-#### Sampe of a problem.json
+### Sample of a problem.json
 ```json
 {
   "ID": "...",
@@ -33,3 +36,6 @@
   "memory-limit": 268435456
 }
 ```
+
+## Current problems
+- Only accept English statement (could use Vietnamese inside)
