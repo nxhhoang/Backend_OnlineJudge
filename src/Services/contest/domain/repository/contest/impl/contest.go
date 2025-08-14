@@ -38,7 +38,7 @@ func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (str
 		Authors:     []string{},
 		Curators:    []string{},
 		Testers:     []string{},
-		Contestants: sortedset.New[uint64, uint64, uint64](),
+		Contestants: sortedset.New[uint64, uint64, domain.Contestant](),
 
 		ProblemLabels: []string{},
 		Problems:      []uint64{},
