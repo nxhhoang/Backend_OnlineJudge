@@ -59,8 +59,16 @@ func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (str
 	return newContest.Id, nil
 }
 
-func (cr *ContestRepositoryImpl) GetById(ctx context.Context, c *domain.Contest) (*domain.Contest, error) {
-	return nil, nil
+func (cr *ContestRepositoryImpl) GetById(contestId string) (*domain.Contest, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	var contest *domain.Contest
+	cr.collection.FindOne(ctx, bson.M{
+		"contest-id": contestId,
+	}).Decode(contest)
+
+	return contest, nil
 }
 
 func (cr *ContestRepositoryImpl) AddAuthor(contestId string, authorId uint64) error {

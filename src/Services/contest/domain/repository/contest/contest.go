@@ -6,7 +6,7 @@ import (
 )
 
 type ContestRepository interface {
-	GetById(ctx context.Context, c *domain.Contest) (*domain.Contest, error)
+	GetById(contestId string) (*domain.Contest, error)
 	Create(ctx context.Context, author uint64) (string, error)
 
 	AddAuthor(contestId string, authorId uint64) error
