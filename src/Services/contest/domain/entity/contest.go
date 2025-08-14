@@ -56,7 +56,11 @@ func (contest *Contest) has_started() bool {
 	return time.Now().After(contest.StartTime)
 }
 
-func (contest *Contest) can_see_scoreboard(UserId uint64) bool {
+func (contest *Contest) has_ended() bool {
+	return time.Now().After(contest.EndTime)
+}
+
+func (contest *Contest) can_see_scoreboard(userId uint64) bool {
 	if contest.ScoreboardVisibility == SCOREBOARD_HIDDEN || time.Now().Before(contest.StartTime) {
 		return false
 	}
@@ -70,4 +74,27 @@ func (contest *Contest) can_see_scoreboard(UserId uint64) bool {
 	// }
 
 	return false
+}
+
+func (contest *Contest) AddContestant(userId uint64) error {
+	if contest.has_ended() {
+		return fmt.Errorf("contest %s has ended", contest.Id)
+	}
+	if contest.Contestants.GetByKey(userId) != nil {
+		return fmt.Errorf("user %d already in contest", userId)
+	}
+
+	newContestant := Contestant{
+		UserID:    userId,
+		RealStart: time.Now(),
+
+		Submissions: []uint64{},
+
+		TotalPoints: 0.00,
+		Points:      make([]float64, len(contest.Problems)),
+	}
+
+	contest.Contestants.AddOrUpdate(userId, 0.00, newContestant)
+
+	return nil
 }
