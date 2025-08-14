@@ -11,4 +11,6 @@ type ContestRepository interface {
 
 	AddAuthor(contestId string, authorId uint64) error
 	RemoveAuthor(ctx context.Context, contestId string, authorId uint64) error
+
+	AddContestant(contestId string, userId uint64) error
 }

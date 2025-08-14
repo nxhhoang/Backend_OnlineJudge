@@ -84,17 +84,7 @@ func (contest *Contest) AddContestant(userId uint64) error {
 		return fmt.Errorf("user %d already in contest", userId)
 	}
 
-	newContestant := Contestant{
-		UserID:    userId,
-		RealStart: time.Now(),
-
-		Submissions: []uint64{},
-
-		TotalPoints: 0.00,
-		Points:      make([]float64, len(contest.Problems)),
-	}
-
-	contest.Contestants.AddOrUpdate(userId, 0.00, newContestant)
+	contest.Contestants.AddOrUpdate(userId, 0.00, CreateContestant(userId))
 
 	return nil
 }
