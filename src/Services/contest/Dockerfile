@@ -1,0 +1,15 @@
+FROM golang:1.24.4
+
+WORKDIR /app
+
+COPY go.mod go.sum .
+RUN go mod download
+
+COPY . .
+RUN go mod tidy
+
+RUN go install github.com/air-verse/air@latest
+EXPOSE 3000
+# RUN air init
+# CMD ["go", "run", "cmd/main.go"]
+CMD ["air", "-c", ".air.toml"]

@@ -1,0 +1,6 @@
+.env
+submission-judge-db-data/
+problem-db-data/
+redis-submission-judge/
+/storage/
+postgres-data/

@@ -1,0 +1,116 @@
+services:
+  submission-judge:
+    container_name: submission-judge-app
+    build: 
+      context: ./src/Services/submission-judge/ 
+      target: dev #prod 
+    env_file:
+      # - src/Services/submission-judge/.env
+      - ./.env
+    ports:
+      - "8000:8000"
+    depends_on: 
+      - mongosubmissionjudgedb
+    volumes:
+      - ./src/Services/submission-judge:/app
+      - ./storage:/problems_dir:ro
+    networks:
+      - online-judge-network
+    privileged: true
+  mongosubmissionjudgedb: 
+    container_name: submission-judge-db
+    image: mongo
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: submissionjudgedb 
+    ports:
+      - '37017:27017'
+    volumes:
+      - ./submission-judge-db-data:/data/db
+    networks:
+      - online-judge-network
+  # redissubmissionjudge:
+  #   container_name: redis-submission-judge
+  #   image: redis
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   command: redis-server --save 20 1 --loglevel warning --requirepass root
+  #   networks:
+  #     - online-judge-network
+  #   volumes:
+  #     - ./redis-submission-judge:/data
+  gateway:
+    container_name: gateway-app 
+    build:
+      context: ./src/Services/gateway/
+      target: dev #prod
+    env_file:
+      # - src/Services/gateway/.env
+      - ./.env
+    ports:
+      - "80:80"
+    volumes:
+      - ./src/Services/gateway:/app
+    networks:
+      - online-judge-network
+  problem:
+    build: ./src/Services/problem/
+    container_name: problem
+    ports:
+      - '3000:3000'
+    depends_on:
+      - problemmongodb 
+    env_file:
+      - ./.env
+    volumes:
+      - ./src/Services/problem:/app
+      - ./storage:/storage
+    networks:
+      - online-judge-network
+  problemmongodb:
+    image: mongo
+    container_name: problem-mongo
+    restart: always
+    environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root 
+    #   MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: problem-db
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./problem-db-data:/data/db
+    networks:
+      - online-judge-network
+  # auth-app:
+  #   build: ./src/Services/auth-v2/
+  #   ports:
+  #     - "50051:50051"
+  #   depends_on:
+  #     - mypostgres
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgresql://postgres:postgres@mypostgres:5432/auth_db?schema=public
+  #     - JWT_SECRET=your_jwt_secret
+  #   volumes:
+  #     - ./src/Services/auth-v2:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - online-judge-network
+  # mypostgres:
+  #   image: postgres:latest
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=auth_db
+  #   volumes:
+  #     - ./postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - online-judge-network
+networks:
+  online-judge-network:
+    driver: bridge

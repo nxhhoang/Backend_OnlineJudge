@@ -1,7 +1,0 @@
-node_modules
-cache
-dbdata
-.env
-build_logs
-views/
-src/*/*.view.ts
