@@ -11,3 +11,16 @@ type Contestant struct {
 	TotalPoints float64           `bson:"total-points"`
 	Points      map[uint8]float64 `bson:"points"` // points of each problem
 }
+
+func CreateContestant(userId uint64) Contestant {
+	newContestant := Contestant{
+		UserID:    userId,
+		RealStart: time.Now(),
+
+		Submissions: []uint64{},
+
+		TotalPoints: 0.00,
+		Points:      map[uint8]float64{},
+	}
+	return newContestant
+}
