@@ -8,6 +8,6 @@ type Contestant struct {
 
 	Submissions []uint64 `bson:"submissions"`
 
-	TotalPoints uint64   `bson:"total-points"`
-	Points      []uint64 `bson:"points"`
+	TotalPoints float64   `bson:"total-points"`
+	Points      []float64 `bson:"points"`
 }
