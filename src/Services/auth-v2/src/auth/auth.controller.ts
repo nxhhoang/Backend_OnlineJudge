@@ -53,7 +53,6 @@ export class AuthController {
       }
     }
   })
-  @UseGuards(JwtAuthGuard)
   async validateToken(@Param('token') token: string) {
     return this.authService.validateToken(token);
   }
