@@ -25,7 +25,7 @@ export class UsersController {
           type: 'object',
           properties: {
             id: { type: 'number', example: 1 },
-            email: { type: 'string', example: 'user@example.com' },
+            username: { type: 'string', example: 'john_doe' },
             name: { type: 'string', example: 'John Doe' }
           }
         }
