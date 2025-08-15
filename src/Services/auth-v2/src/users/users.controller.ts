@@ -60,11 +60,11 @@ export class UsersController {
     return this.usersService.findByEmail(email);
   }
 
-  @Get('me')
+  @Get(':id')
   @ApiOperation({ summary: 'Get current authenticated user' })
   @ApiBearerAuth('JWT-auth')
-  async getme(@GetUser() {sub}: JwtPayLoad) {
-    const user = await this.usersService.findById(sub);
+  async getme(@Param('id') id: number) {
+    const user = await this.usersService.findById(id);
     return {
       id: user.id,
       email: user.email,
