@@ -10,9 +10,18 @@ import (
 
 func SubmissionApiProxy() http.Handler {
 	cfg := config.Load()
+	return newProxy(cfg.Endpoints.Submission)
+}
 
+func LoginApiProxy() http.Handler {
+	cfg := config.Load()
+
+	return newProxy(cfg.Endpoints.Auth)
+}
+
+func newProxy(endpoint string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		url, err := url.Parse(cfg.Endpoints.Submission)
+		url, err := url.Parse(endpoint)
 		if err != nil {
 			http.Error(w, "Something went wrong", http.StatusInternalServerError)
 			return
