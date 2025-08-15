@@ -9,7 +9,6 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const { username, password, name } = createUserDto;
-    console.log('Creating user:', username, name);
     const hashedPassword = await bcrypt.hash(password, 10);
     return this.prisma.user.create({
       data: {
@@ -25,7 +24,6 @@ export class UsersService {
   }
 
   async findById(user_id: number) { // Changed from string to number
-    console.log('Finding user by user_id:', user_id);
     return this.prisma.user.findUnique({ where: { id: user_id } });
   }
 }

@@ -11,7 +11,6 @@ export class AuthService {
     private jwtService: JwtService,
     private prisma: PrismaService
   ) {}
-
   async findUserByUsername(username: string) {
     return this.prisma.user.findUnique({
       where: { username }
@@ -27,12 +26,12 @@ export class AuthService {
     return null;
   }
 
-  async login(email: string, password: string) {
-    const user = await this.validateUser(email, password);
+  async login(username: string, password: string) {
+    const user = await this.validateUser(username, password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const payload = { email: user.email, sub: user.id };
+    const payload = { username: user.username, sub: user.id };
     return this.jwtService.sign(payload)
   }
 
@@ -44,7 +43,7 @@ export class AuthService {
       return {
         code: 0,
         user: {
-          email: decoded.email,
+          username: decoded.username,
           id: decoded.sub,
         }
       }
@@ -65,7 +64,7 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
-      const payload = { email: user.email, sub: user.id };
+      const payload = { username: user.username, sub: user.id };
       return this.jwtService.sign(payload);
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
