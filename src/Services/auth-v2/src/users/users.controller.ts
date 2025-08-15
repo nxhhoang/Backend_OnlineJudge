@@ -25,7 +25,7 @@ export class UsersController {
           type: 'object',
           properties: {
             id: { type: 'number', example: 1 },
-            email: { type: 'string', example: 'user@example.com' },
+            username: { type: 'string', example: 'john_doe' },
             name: { type: 'string', example: 'John Doe' }
           }
         }
@@ -38,7 +38,6 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('email/:email')
   @ApiOperation({ summary: 'Find user by email' })
   @ApiBearerAuth('JWT-auth')
@@ -61,7 +60,6 @@ export class UsersController {
     return this.usersService.findByEmail(email);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('me')
   @ApiOperation({ summary: 'Get current authenticated user' })
   @ApiBearerAuth('JWT-auth')
@@ -70,11 +68,11 @@ export class UsersController {
     return {
       id: user.id,
       email: user.email,
+      username: user.username,
       name: user.name,
     };
   }
 
-  // @UseGuards(JwtAuthGuard)
   // @Get(':id')
   // @ApiOperation({ summary: 'Find user by ID' })
   // @ApiBearerAuth('JWT-auth')

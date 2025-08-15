@@ -24,7 +24,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const payload = { email: user.email, sub: user.id };
+    const payload = { username: user.username, sub: user.id };
     return this.jwtService.sign(payload)
   }
 
@@ -36,7 +36,7 @@ export class AuthService {
       return {
         code: 0,
         user: {
-          email: decoded.email,
+          username: decoded.username,
           id: decoded.sub,
         }
       }
@@ -57,7 +57,7 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
-      const payload = { email: user.email, sub: user.id };
+      const payload = { username: user.username, sub: user.id };
       return this.jwtService.sign(payload);
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
