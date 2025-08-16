@@ -107,3 +107,13 @@ func CheckRunStatus(i *domain.Isolate, submissionId string) (*judge.RunVerdict, 
 
 	return ParseMetaFile(meta)
 }
+
+func GetCompileMessage(vert *judge.RunVerdict, errBuf string) string {
+	var msg string
+	if len(errBuf) > 0 {
+		msg = errBuf
+	} else {
+		msg = vert.Message
+	}
+	return msg
+}

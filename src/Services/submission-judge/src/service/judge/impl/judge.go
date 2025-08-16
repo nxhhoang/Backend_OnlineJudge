@@ -111,6 +111,8 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 	if lang.NeedCompile() {
 		lang.Compile(i, req, &errBuf)
 		vert, err = judgeutils.CheckRunStatus(i, req.SubmissionId)
+		msg := judgeutils.GetCompileMessage(vert, errBuf.String())
+
 		i.Logger.Info().Msgf("Compile message: %s", errBuf.String())
 		if err != nil {
 			err = js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, vert.Time, vert.MaxRss, 0, 0, vert.Message)
@@ -122,12 +124,6 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 
 		switch vert.Status {
 		case "RE", "SG", "TO", "XX":
-			var msg string
-			if len(errBuf.String()) > 0 {
-				msg = errBuf.String()
-			} else {
-				msg = vert.Message
-			}
 			err = js.evalRepo.UpdateFinal(ctx, req.EvalId, domain.COMPILATION_ERROR, vert.Time, vert.MaxRss, 0, 0, msg)
 			if err != nil {
 				i.Logger.Error().Msgf("Database error, can't update verdict: %v", err)

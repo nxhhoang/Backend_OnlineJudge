@@ -18,6 +18,7 @@ type Config struct {
 	}
 	Endpoints struct {
 		Submission string
+		Auth       string
 	}
 }
 
@@ -40,6 +41,7 @@ func Load() *Config {
 	cfg.Server.WriteTimeout = time.Second * 15
 
 	cfg.Endpoints.Submission = getEnv("GATEWAY_SUBMISSION_ENDPOINT", "")
+	cfg.Endpoints.Auth = getEnv("GATEWAY_AUTH_ENDPOINT", "")
 	return cfg
 }
 
