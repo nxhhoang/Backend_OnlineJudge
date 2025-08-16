@@ -8,11 +8,11 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { email, password, name } = createUserDto;
+    const { username, password, name } = createUserDto;
     const hashedPassword = await bcrypt.hash(password, 10);
     return this.prisma.user.create({
       data: {
-        email,
+        username,
         password: hashedPassword,
         name,
       },
@@ -24,7 +24,6 @@ export class UsersService {
   }
 
   async findById(user_id: number) { // Changed from string to number
-    console.log('Finding user by user_id:', user_id);
     return this.prisma.user.findUnique({ where: { id: user_id } });
   }
 }

@@ -26,7 +26,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto) {
-    const access_token = await this.authService.login(loginDto.email, loginDto.password);
+    const access_token = await this.authService.login(loginDto.username, loginDto.password);
     return {
       message: "Login successful",
       access_token,
@@ -53,7 +53,6 @@ export class AuthController {
       }
     }
   })
-  @UseGuards(JwtAuthGuard)
   async validateToken(@Param('token') token: string) {
     return this.authService.validateToken(token);
   }
