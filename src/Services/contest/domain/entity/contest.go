@@ -3,8 +3,6 @@ package domain
 import (
 	"fmt"
 	"time"
-
-	"github.com/zavitax/sortedset-go"
 )
 
 const (
@@ -22,10 +20,10 @@ type Contest struct {
 	Name        string `bson:"name"`
 	Description string `bson:"description"`
 
-	Authors     []string                                         `bson:"authors"`
-	Curators    []string                                         `bson:"curators"`
-	Testers     []string                                         `bson:"testers"`
-	Contestants *sortedset.SortedSet[uint64, uint64, Contestant] `bson:"contestants"`
+	Authors     []string     `bson:"authors"`
+	Curators    []string     `bson:"curators"`
+	Testers     []string     `bson:"testers"`
+	Contestants []Contestant `bson:"contestants"`
 
 	ProblemLabels []string `bson:"problem_labels"`
 	Problems      []uint64 `bson:"problems"`
@@ -74,17 +72,4 @@ func (contest *Contest) can_see_scoreboard(userId uint64) bool {
 	// }
 
 	return false
-}
-
-func (contest *Contest) AddContestant(userId uint64) error {
-	if contest.has_ended() {
-		return fmt.Errorf("contest %s has ended", contest.Id)
-	}
-	if contest.Contestants.GetByKey(userId) != nil {
-		return fmt.Errorf("user %d already in contest", userId)
-	}
-
-	contest.Contestants.AddOrUpdate(userId, 0.00, CreateContestant(userId))
-
-	return nil
 }

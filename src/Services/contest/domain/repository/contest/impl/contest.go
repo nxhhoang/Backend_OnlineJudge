@@ -38,7 +38,7 @@ func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (str
 		Authors:     []string{},
 		Curators:    []string{},
 		Testers:     []string{},
-		Contestants: sortedset.New[uint64, uint64, domain.Contestant](),
+		Contestants: []domain.Contestant{},
 
 		ProblemLabels: []string{},
 		Problems:      []uint64{},
@@ -88,6 +88,24 @@ func (cr *ContestRepositoryImpl) AddAuthor(contestId string, authorId uint64) er
 
 	return nil
 }
+
 func (cr *ContestRepositoryImpl) RemoveAuthor(ctx context.Context, contestId string, authorId uint64) error {
+	return nil
+}
+
+func (cr *ContestRepositoryImpl) AddContestant(contestId string, userId uint64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	_, err := cr.collection.UpdateOne(
+		ctx,
+		bson.M{"id": contestId},
+		bson.M{"$push": bson.M{"contestants": domain.CreateContestant(userId)}},
+	)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
