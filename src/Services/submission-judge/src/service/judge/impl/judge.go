@@ -10,6 +10,7 @@ import (
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	repository "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/evaluation"
+	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/checker"
@@ -47,27 +48,26 @@ func NewJudgeService(pService *poolservice.PoolService, problemService problem.P
 // This will be the final wrapper to double check condition, at the end of the function
 // The real judge function will be called, and it will be asynchonous
 func (js *JudgeServiceImpl) Judge(ctx context.Context, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error {
-
 	lang, err := store.DefaultStore.Get((*req).LanguageId)
 	if err != nil {
 		return err
 	}
 
-	isolate, err := (*js.pService).Get()
-	if err != nil {
-		return err
-	}
-	isolate.Logger.Debug().Msgf("Took out an isolate, number of isolate remains in the pool is: %d", (*js.pService).Len())
-
 	// Create a new context since judging has nothing to do with http request
 	bgCtx := context.Background()
-	go js.JudgeStart(bgCtx, isolate, lang, req, problemInfo)
+	go js.JudgeStart(bgCtx, lang, req, problemInfo)
 	return nil
 }
 
-func (js *JudgeServiceImpl) JudgeStart(ctx context.Context, i *domain.Isolate, lang pkg.Language, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error {
+func (js *JudgeServiceImpl) JudgeStart(ctx context.Context, lang pkg.Language, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error {
+	// This should be here, inside judgeStart
+	i, err := (*js.pService).Get()
+	if err != nil {
+		return err
+	}
+	i.Logger.Debug().Msgf("Took out an isolate, number of isolate remains in the pool is: %d", (*js.pService).Len())
 	// Prepare all the nessessary files
-	err := js.Prep(ctx, i, lang, req, problemInfo)
+	err = js.Prep(ctx, i, lang, req, problemInfo)
 	if err != nil {
 		i.Logger.Debug().Msgf("Error: %v", err)
 		i.Logger.Debug().Msgf("Judgement failed or CompilationError, return the isolate, number of isolate in the pool is: %d", (*js.pService).Len())
@@ -279,10 +279,11 @@ func (js *JudgeServiceImpl) JudgeICPC(ctx context.Context, i *domain.Isolate, la
 }
 
 func (js *JudgeServiceImpl) checkVerdict(vert *judge.RunVerdict, checkerAddr, inputAddr, outputAddr, answerAddr string) (domain.Verdict, string, error) {
+	config.GetLogger().Debug().Msgf("Status is: %s", vert.Status)
 	switch vert.Status {
 	case "TO":
 		return domain.TIME_LIMIT_EXCEEDED, vert.Message, nil
-	case "RE, SG":
+	case "RE", "SG":
 		return domain.RUNTIME_ERROR, vert.Message, nil
 	case "XX":
 		return domain.JUDGEMENT_FAILED, vert.Message, nil

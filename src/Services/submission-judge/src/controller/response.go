@@ -28,7 +28,15 @@ func WriteCreatedOutput[T any](c *gin.Context, output *T, err error) {
 }
 
 func WriteFailedOutput(c *gin.Context, err error) {
-	c.JSON(http.StatusNotFound, gin.H{
+	// c.JSON(http.StatusNotFound, gin.H{
+	// 	"success": false,
+	// 	"message": err.Error(),
+	// })
+	WriteFailed(c, err, http.StatusNotFound)
+}
+
+func WriteFailed(c *gin.Context, err error, errorCode int) {
+	c.JSON(errorCode, gin.H{
 		"success": false,
 		"message": err.Error(),
 	})
