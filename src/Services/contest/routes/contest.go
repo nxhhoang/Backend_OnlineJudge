@@ -39,27 +39,33 @@ func ContestRoutes(app *fiber.App) {
 		})
 	})
 
-	route.Post("add_author", func(c *fiber.Ctx) error {
-		var authorId int
+	editRoute := route.Group("/edit")
+
+	editRoute.Post("/add-people", func(c *fiber.Ctx) error {
 		var contestId string
-		var err error
+		var peopleType string
+		var userId uint64
 
-		authorId, err = (strconv.Atoi(c.Query("author_id", "")))
+		if contestId = c.Query("contest-id", ""); contestId == "" {
+			return c.Status(400).SendString("contest-id required")
+		}
+
+		if peopleType = c.Query("people-type", ""); peopleType == "" {
+			return c.Status(400).SendString("people-type required")
+		}
+
+		userId, err := strconv.ParseUint(c.Query("user-id", "0"), 10, 64)
 		if err != nil {
-			return err
+			return c.Status(400).SendString(err.Error())
 		}
-		if authorId == 0 {
-			return c.Status(400).SendString("missing required parameter: author_id")
-		}
-
-		contestId = c.Query("contest_id", "")
-		if contestId == "" {
-			return c.Status(400).SendString("missing required parameter: contest_id")
+		if userId == 0 {
+			return c.Status(400).SendString("user-id must be non-zero")
 		}
 
 		cr := repository.NewContestRepository(database.Db)
-		if err := cr.AddAuthor(contestId, uint64(authorId)); err != nil {
-			return err
+
+		if err := cr.AddPeople(contestId, peopleType, userId); err != nil {
+			return c.Status(400).SendString(err.Error())
 		}
 
 		return c.SendStatus(200)
