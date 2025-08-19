@@ -8,8 +8,8 @@ type Contestant struct {
 
 	Submissions []uint64 `bson:"submissions"`
 
-	TotalPoints float64           `bson:"total-points"`
-	Points      map[uint8]float64 `bson:"points"` // points of each problem
+	TotalPoints float64            `bson:"total-points"`
+	Points      map[uint64]float64 `bson:"points"` // points of each problem
 }
 
 func CreateContestant(userId uint64) Contestant {
@@ -20,7 +20,7 @@ func CreateContestant(userId uint64) Contestant {
 		Submissions: []uint64{},
 
 		TotalPoints: 0.00,
-		Points:      map[uint8]float64{},
+		Points:      map[uint64]float64{},
 	}
 	return newContestant
 }
