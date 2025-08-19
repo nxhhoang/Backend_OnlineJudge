@@ -34,6 +34,16 @@ type Contest struct {
 	EndTime   time.Time `bson:"end_time"`
 }
 
+func (contest *Contest) ContestantExist(userId uint64) bool {
+	fmt.Printf("contestants: %v\n", contest.Contestants)
+	for _, contestant := range contest.Contestants {
+		if contestant.UserID == userId {
+			return true
+		}
+	}
+	return false
+}
+
 func (contest *Contest) clean() error {
 	if contest.EndTime.IsZero() {
 		return fmt.Errorf("invalid start time")
