@@ -20,9 +20,9 @@ type Contest struct {
 	Name        string `bson:"name"`
 	Description string `bson:"description"`
 
-	Authors     []string     `bson:"authors"`
-	Curators    []string     `bson:"curators"`
-	Testers     []string     `bson:"testers"`
+	Authors     []uint64     `bson:"authors"`
+	Curators    []uint64     `bson:"curators"`
+	Testers     []uint64     `bson:"testers"`
 	Contestants []Contestant `bson:"contestants"`
 
 	ProblemLabels []string `bson:"problem_labels"`
