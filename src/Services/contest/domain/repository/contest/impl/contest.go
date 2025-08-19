@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"contest/common"
 	domain "contest/domain/entity"
 	repository "contest/domain/repository/contest"
 	"context"
 	"fmt"
-	"strconv"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,39 +59,89 @@ func (cr *ContestRepositoryImpl) Create(ctx context.Context, author uint64) (str
 	return newContest.Id, nil
 }
 
-func (cr *ContestRepositoryImpl) GetById(contestId string) (*domain.Contest, error) {
+func (cr *ContestRepositoryImpl) GetById(contestId string) (domain.Contest, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	var contest *domain.Contest
+	var contest domain.Contest
 	cr.collection.FindOne(ctx, bson.M{
-		"contest-id": contestId,
-	}).Decode(contest)
+		"id": contestId,
+	}).Decode(&contest)
 
 	return contest, nil
 }
 
-func (cr *ContestRepositoryImpl) AddAuthor(contestId string, authorId uint64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (cr *ContestRepositoryImpl) AddPeople(contestId string, peopleType string, userId uint64) error {
+	if !slices.Contains(common.CONTEST_PEOPLE, peopleType) {
+		return fmt.Errorf("invalid peopleType")
+	}
+
+	contest, err := cr.GetById(contestId)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("contest: %v\n", contest)
+
+	// Check if already exists
+	if peopleType == common.CONTEST_CONTESTANTS && contest.ContestantExist(userId) {
+		return fmt.Errorf("contestant %d already in contest %s", userId, contestId)
+	}
+	if peopleType == common.CONTEST_AUTHORS && slices.Contains(contest.Authors, userId) {
+		return fmt.Errorf("author %d already in contest %s", userId, contestId)
+	}
+	if peopleType == common.CONTEST_CURATORS && slices.Contains(contest.Curators, userId) {
+		return fmt.Errorf("curator %d already in contest %s", userId, contestId)
+	}
+	if peopleType == common.CONTEST_TESTERS && slices.Contains(contest.Testers, userId) {
+		return fmt.Errorf("tester %d already in contest %s", userId, contestId)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	_, err := cr.collection.UpdateOne(
+	var data interface{}
+	if peopleType == common.CONTEST_CONTESTANTS {
+		data = domain.CreateContestant(userId)
+	} else {
+		data = userId
+	}
+
+	_, err = cr.collection.UpdateOne(
 		ctx,
 		bson.M{"id": contestId},
-		bson.M{"$push": bson.M{"authors": strconv.Itoa(int(authorId))}},
+		bson.M{"$push": bson.M{peopleType: data}},
 	)
 	if err != nil {
 		return err
 	}
 
-	log.Info().Msg(fmt.Sprintf("Add author %d to the contest %s", authorId, contestId))
+	log.Info().Msgf("add user %v to group %s of contest %s", data, peopleType, contestId)
 
 	return nil
 }
 
-func (cr *ContestRepositoryImpl) RemoveAuthor(ctx context.Context, contestId string, authorId uint64) error {
-	return nil
-}
+// func (cr *ContestRepositoryImpl) AddAuthor(contestId string, authorId uint64) error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 	defer cancel()
+
+// 	_, err := cr.collection.UpdateOne(
+// 		ctx,
+// 		bson.M{"id": contestId},
+// 		bson.M{"$push": bson.M{"authors": strconv.Itoa(int(authorId))}},
+// 	)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	log.Info().Msg(fmt.Sprintf("Add author %d to the contest %s", authorId, contestId))
+
+// 	return nil
+// }
+
+// func (cr *ContestRepositoryImpl) RemoveAuthor(ctx context.Context, contestId string, authorId uint64) error {
+// 	return nil
+// }
 
 func (cr *ContestRepositoryImpl) AddContestant(contestId string, userId uint64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
