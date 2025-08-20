@@ -6,6 +6,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/controller"
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	ei "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/evaluation/impl"
+	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/redissubmission/impl"
 	sci "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode/impl"
 	si "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
 	checkerimpl "github.com/bibimoni/Online-judge/submission-judge/src/service/checker/impl"
@@ -29,7 +30,8 @@ func HandleSubmitSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc
 	problemSvc, err := pi.NewProblemService()
 	evalRepo := ei.NewEvaluationRepository(db)
 	checker := checkerimpl.NewCheckerService()
-	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool(), problemSvc, evalRepo, checker)
+	redis := impl.NewRedisSubmissionRepository(appContext.GetRedis())
+	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool(), problemSvc, evalRepo, checker, redis, submissionRepo, sourcecodeRepo)
 	if err != nil {
 		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil

@@ -102,7 +102,18 @@ func (er *EvaluationRepositoryImpl) GetEvalBySubmissionId(ctx context.Context, s
 	return &returnEval, nil
 }
 
-func (er *EvaluationRepositoryImpl) UpdateCase(ctx context.Context, evalId string, verdictCase domain.Verdict, cpuTimeCase float64, memoryUsageCase memory.Memory, outputCase string, pointsCase int) error {
+func (er *EvaluationRepositoryImpl) UpdateCase(
+	ctx context.Context,
+	evalId string,
+	verdictCase domain.Verdict,
+	cpuTimeCase float64,
+	memoryUsageCase memory.Memory,
+	outputCase string,
+	pointsCase int,
+	cpuTime float64,
+	memoryUsage memory.Memory,
+	nsucess int,
+) error {
 	bid, err := bson.ObjectIDFromHex(evalId)
 	if err != nil {
 		return err
@@ -117,7 +128,10 @@ func (er *EvaluationRepositoryImpl) UpdateCase(ctx context.Context, evalId strin
 			"points_case":       pointsCase,
 		},
 		"$set": bson.M{
-			"eval_status": domain.JUDGING,
+			"eval_status":  domain.JUDGING,
+			"cpu_time":     cpuTime,
+			"memory_usage": memoryUsage,
+			"n_success":    nsucess,
 		},
 	})
 
@@ -128,7 +142,16 @@ func (er *EvaluationRepositoryImpl) UpdateCase(ctx context.Context, evalId strin
 	return nil
 }
 
-func (er *EvaluationRepositoryImpl) UpdateFinal(ctx context.Context, evalId string, verdict domain.Verdict, cpuTime float64, memoryUsage memory.Memory, nsucess int, points int, message string) error {
+func (er *EvaluationRepositoryImpl) UpdateFinal(
+	ctx context.Context,
+	evalId string,
+	verdict domain.Verdict,
+	cpuTime float64,
+	memoryUsage memory.Memory,
+	nsucess int,
+	points int,
+	message string,
+) error {
 	bid, err := bson.ObjectIDFromHex(evalId)
 	if err != nil {
 		return err

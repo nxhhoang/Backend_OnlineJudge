@@ -3,6 +3,7 @@ package websocketsubmission
 import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/common"
 	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
+	"github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/redissubmission/impl"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/wssubmission"
 	"github.com/bibimoni/Online-judge/submission-judge/src/usecase/wssubmission/interactor"
 	"github.com/gin-gonic/gin"
@@ -10,10 +11,10 @@ import (
 
 func HandleSubmissionWSRequest(appContext appctx.AppContext) gin.HandlerFunc {
 	rdb := appContext.GetRedis()
+	rrepo := impl.NewRedisSubmissionRepository(rdb)
+	wsSubmissionInteractor := interactor.NewWSSubmissionInteractor(rrepo)
 
-	wsSubmissionInteractor := interactor.NewWSSubmissionInteractor(rdb)
-
-	return common.InvokeWSUseCase[usecase.WSSubmissionInput, usecase.WSSubmissionResponse](
+	return common.InvokeWSUseCase(
 		toSubmissionWSRequest,
 		wsSubmissionInteractor.SubmissionStatus,
 	)

@@ -17,8 +17,8 @@ import (
 	isolatei "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/impl"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/judge"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
-	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission"
+	isubmission_utils "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission/utils"
 )
 
 type SubmissionInteractor struct {
@@ -104,54 +104,11 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 }
 
 func (si *SubmissionInteractor) GetSubmission(ctx context.Context, input *usecase.GetSubmissionInput) (*usecase.GetSubmissionOutput, error) {
-	log := config.GetLogger()
-	log.Debug().Msgf("input :%v", *input)
-
-	sub, err := si.submissionRepo.FindSubmission(ctx, input.SubmissionId)
-	if err != nil {
-		log.Debug().Msgf("Find submission, error: %v", err)
-		return nil, err
-	}
-
-	source, err := si.sourcecodeRepo.GetSourceBySubmissionId(ctx, (*sub).Id)
-	if err != nil {
-		log.Debug().Msgf("Find sourcecode, error: %v", err)
-		return nil, err
-	}
-
-	eval, err := si.evalRepo.GetEvalBySubmissionId(ctx, (*sub).Id)
-	if err != nil {
-		log.Debug().Msgf("Find eval, error: %v", err)
-		return nil, err
-	}
-
-	lang, err := store.DefaultStore.Get((*source).LanguageId)
-	if err != nil {
-		return nil, err
-	}
-
-	returnVal := usecase.GetSubmissionOutput{
-		ProblemId:       (*sub).ProblemId,
-		Verdict:         (*eval).Verdict,
-		VerdictCase:     (*eval).VerdictCase,
-		CpuTime:         (*eval).CpuTime,
-		CpuTimeCase:     (*eval).CpuTimeCase,
-		MemoryUsage:     (*eval).MemoryUsage,
-		MemoryUsageCase: (*eval).MemoryUsageCase,
-		NSuccess:        (*eval).NSuccess,
-		Outputs:         (*eval).Outputs,
-		Message:         (*eval).Message,
-		Points:          (*eval).Points,
-		PointsCase:      (*eval).PointsCase,
-		NCases:          (*eval).NCases,
-		TL:              (*eval).TL,
-		ML:              (*eval).ML,
-		Username:        (*sub).Username,
-		Timestamp:       (*sub).Timestamp,
-		Type:            (*sub).Type,
-		Language:        lang.DisplayName(),
-		SourceCode:      (*source).SourceCode,
-	}
-
-	return &returnVal, nil
+	return isubmission_utils.GetSubmission(
+		ctx,
+		si.evalRepo,
+		si.sourcecodeRepo,
+		si.submissionRepo,
+		input.SubmissionId,
+	)
 }

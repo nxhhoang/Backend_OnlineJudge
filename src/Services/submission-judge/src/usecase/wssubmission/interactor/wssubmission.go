@@ -2,44 +2,36 @@ package interactor
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-
+	repository "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/redissubmission"
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/wssubmission"
-	"github.com/redis/go-redis/v9"
 )
 
 type WSSubmissionInteractor struct {
-	rdb *redis.Client
+	rrepo repository.RedisSubmissionRepository
 }
 
-func NewWSSubmissionInteractor(rdb *redis.Client) *WSSubmissionInteractor {
+func NewWSSubmissionInteractor(rrepo repository.RedisSubmissionRepository) *WSSubmissionInteractor {
 	return &WSSubmissionInteractor{
-		rdb,
+		rrepo,
 	}
 }
 
 func (wss *WSSubmissionInteractor) SubmissionStatus(ctx context.Context, input *usecase.WSSubmissionInput, out chan<- *usecase.WSSubmissionResponse) {
-	channel := fmt.Sprintf("%s:%s:%s", input.ProblemId, input.Username, input.SubmissionId)
-	sub := wss.rdb.Subscribe(ctx, channel)
-	defer sub.Close()
-	ch := sub.Channel()
-	config.GetLogger().Debug().Msgf("Test !!")
+	channel := wss.rrepo.GetChannelString(input.ProblemId, input.Username, input.SubmissionId)
+	config.GetLogger().Debug().Msgf("Channel string: %s", channel)
+	stream, err := wss.rrepo.Subscribe(ctx, channel)
+	if err != nil {
+		config.GetLogger().Error().Msgf("Subscribe Error")
+	}
+
 	for {
 		select {
-		case msg, ok := <-ch:
+		case ev, ok := <-stream:
 			if !ok {
 				return
 			}
-			var upd usecase.WSSubmissionResponse
-			err := json.Unmarshal([]byte(msg.Payload), &upd)
-			if err != nil {
-				config.GetLogger().Error().Msgf("Json Unmarshal failed: %v", err)
-				continue
-			}
-
-			out <- &upd
+			out <- ev
 		case <-ctx.Done():
 			return
 		}

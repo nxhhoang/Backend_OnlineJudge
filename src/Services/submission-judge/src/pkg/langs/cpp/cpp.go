@@ -38,10 +38,6 @@ func (cpp Cpp) ExecutableName() string {
 	return "main"
 }
 
-func (cpp Cpp) NeedCompile() bool {
-	return true
-}
-
 // Run cpp file, which is a binary file, make sure it's present in the isolate working directory
 func (cpp Cpp) Run(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.SubmissionRequest) error {
 	i.Logger.Info().Msgf("Start running source code with id: %s", req.SubmissionId)
