@@ -116,7 +116,57 @@ func (cr *ContestRepositoryImpl) AddPeople(contestId string, peopleType string, 
 		return err
 	}
 
-	log.Info().Msgf("add user %v to group %s of contest %s", data, peopleType, contestId)
+	log.Info().Msgf("added user %v to group %s of contest %s", data, peopleType, contestId)
+
+	return nil
+}
+
+func (cr *ContestRepositoryImpl) RemovePeople(contestId string, peopleType string, userId uint64) error {
+	if !slices.Contains(common.CONTEST_PEOPLE, peopleType) {
+		return fmt.Errorf("invalid peopleType")
+	}
+
+	contest, err := cr.GetById(contestId)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("contest: %v\n", contest)
+
+	// Check if already exists
+	if peopleType == common.CONTEST_CONTESTANTS && !contest.ContestantExist(userId) {
+		return fmt.Errorf("contestant %d is not in contest %s", userId, contestId)
+	}
+	if peopleType == common.CONTEST_AUTHORS && !slices.Contains(contest.Authors, userId) {
+		return fmt.Errorf("author %d is not in contest %s", userId, contestId)
+	}
+	if peopleType == common.CONTEST_CURATORS && !slices.Contains(contest.Curators, userId) {
+		return fmt.Errorf("curator %d is not in contest %s", userId, contestId)
+	}
+	if peopleType == common.CONTEST_TESTERS && !slices.Contains(contest.Testers, userId) {
+		return fmt.Errorf("tester %d is not in contest %s", userId, contestId)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	var data interface{}
+	if peopleType == common.CONTEST_CONTESTANTS {
+		data = domain.CreateContestant(userId)
+	} else {
+		data = userId
+	}
+
+	_, err = cr.collection.UpdateOne(
+		ctx,
+		bson.M{"id": contestId},
+		bson.M{"$pull": bson.M{peopleType: data}},
+	)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Msgf("removed user %v to group %s of contest %s", data, peopleType, contestId)
 
 	return nil
 }
@@ -143,19 +193,19 @@ func (cr *ContestRepositoryImpl) AddPeople(contestId string, peopleType string, 
 // 	return nil
 // }
 
-func (cr *ContestRepositoryImpl) AddContestant(contestId string, userId uint64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+// func (cr *ContestRepositoryImpl) AddContestant(contestId string, userId uint64) error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+// 	defer cancel()
 
-	_, err := cr.collection.UpdateOne(
-		ctx,
-		bson.M{"id": contestId},
-		bson.M{"$push": bson.M{"contestants": domain.CreateContestant(userId)}},
-	)
+// 	_, err := cr.collection.UpdateOne(
+// 		ctx,
+// 		bson.M{"id": contestId},
+// 		bson.M{"$push": bson.M{"contestants": domain.CreateContestant(userId)}},
+// 	)
 
-	if err != nil {
-		return err
-	}
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

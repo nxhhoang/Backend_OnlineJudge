@@ -4,9 +4,11 @@ import (
 	repository "contest/domain/repository/contest/impl"
 	"contest/internal/infrastructure/database"
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -39,35 +41,89 @@ func ContestRoutes(app *fiber.App) {
 		})
 	})
 
-	editRoute := route.Group("/edit")
+	route.Post("/edit", func(c *fiber.Ctx) error {
+		var editType string
 
-	editRoute.Post("/add-people", func(c *fiber.Ctx) error {
-		var contestId string
-		var peopleType string
-		var userId uint64
-
-		if contestId = c.Query("contest-id", ""); contestId == "" {
+		if editType = c.Query("edit-type", ""); editType == "" {
 			return c.Status(400).SendString("contest-id required")
 		}
 
-		if peopleType = c.Query("people-type", ""); peopleType == "" {
-			return c.Status(400).SendString("people-type required")
+		if editType == "add-people" {
+			return handleAddPeople(c)
 		}
 
-		userId, err := strconv.ParseUint(c.Query("user-id", "0"), 10, 64)
-		if err != nil {
-			return c.Status(400).SendString(err.Error())
-		}
-		if userId == 0 {
-			return c.Status(400).SendString("user-id must be non-zero")
+		if editType == "remove-people" {
+			return handleRemovePeople(c)
 		}
 
-		cr := repository.NewContestRepository(database.Db)
-
-		if err := cr.AddPeople(contestId, peopleType, userId); err != nil {
-			return c.Status(400).SendString(err.Error())
-		}
-
-		return c.SendStatus(200)
+		return c.Status(400).SendString("invalid edit-type")
 	})
+}
+
+func handleAddPeople(c *fiber.Ctx) error {
+	type AddPeopleRequest struct {
+		ContestId  string `json:"contest-id" validate:"required"`
+		PeopleType string `json:"people-type" validate:"required"`
+		UserId     uint64 `json:"user-id" validate:"min=1"`
+	}
+
+	req := new(AddPeopleRequest)
+
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	var validate = validator.New()
+	if err := validate.Struct(req); err != nil {
+		errors := make(map[string]string)
+		for _, e := range err.(validator.ValidationErrors) {
+			errors[e.Field()] = fmt.Sprintf("failed on '%s' tag", e.Tag())
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errors)
+	}
+
+	cr := repository.NewContestRepository(database.Db)
+	if err := cr.AddPeople(req.ContestId, req.PeopleType, req.UserId); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.SendStatus(200)
+}
+
+func handleRemovePeople(c *fiber.Ctx) error {
+	type RemovePeopleRequest struct {
+		ContestId  string `json:"contest-id" validate:"required"`
+		PeopleType string `json:"people-type" validate:"required"`
+		UserId     uint64 `json:"user-id" validate:"min=1"`
+	}
+
+	req := new(RemovePeopleRequest)
+
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	var validate = validator.New()
+	if err := validate.Struct(req); err != nil {
+		errors := make(map[string]string)
+		for _, e := range err.(validator.ValidationErrors) {
+			errors[e.Field()] = fmt.Sprintf("failed on '%s' tag", e.Tag())
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errors)
+	}
+
+	cr := repository.NewContestRepository(database.Db)
+	if err := cr.RemovePeople(req.ContestId, req.PeopleType, req.UserId); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.SendStatus(200)
 }
