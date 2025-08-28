@@ -16,10 +16,8 @@ import (
 )
 
 func ReturnIsolateIfFail(pService *poolservice.PoolService, i *domain.Isolate, err error) {
-	if err != nil {
-		i.Logger.Warn().Msgf("Return the isolate because something went wrong: %v", err)
-		(*pService).Put(i)
-	}
+	i.Logger.Warn().Msgf("Return the isolate because something went wrong: %v", err)
+	(*pService).Put(i)
 }
 
 func ParseMetaFile(data []byte) (*judge.RunVerdict, error) {

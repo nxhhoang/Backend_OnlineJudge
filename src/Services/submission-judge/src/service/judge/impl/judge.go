@@ -250,180 +250,174 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 	return nil
 }
 
-func (js *JudgeServiceImpl) JudgeICPC(ctx context.Context, i *domain.Isolate, lang pkg.Language, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error {
+func (js *JudgeServiceImpl) OnFail(
+	ctx context.Context,
+	i *domain.Isolate,
+	evalId string,
+	curCpu float64,
+	curMem memory.Memory,
+	tcSuccess int,
+	msg string,
+) {
+	if err := js.updateFinal(
+		ctx,
+		evalId,
+		domain.JUDGEMENT_FAILED,
+		curCpu,
+		curMem,
+		tcSuccess,
+		0,
+		msg,
+	); err != nil {
+		i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
+	}
+}
+
+func (js *JudgeServiceImpl) RunCase(
+	ctx context.Context,
+	i *domain.Isolate,
+	lang pkg.Language,
+	req *isolateservice.SubmissionRequest,
+	problemInfo *problem.ProblemServiceGetOutput,
+	tc int,
+	curCpu *float64,
+	curMem *memory.Memory,
+) (done bool, err error) {
+	tcInputAddr, err := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.INPUT), tc)
+	if err != nil {
+		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
+		return true, err
+	}
+
+	outaddr := utils.GetSubmissionDir(i, req.SubmissionId) + "/output_" + strconv.Itoa(tc)
+
+	fout, err := os.Create(outaddr)
+	if err != nil {
+		i.Logger.Panic().Msgf("Error occured when trying to create new output file: %v", err)
+		return true, err
+	}
+	defer fout.Close()
+
+	fin, err := os.Open(tcInputAddr)
+	if err != nil {
+		i.Logger.Panic().Msgf("Error occured when trying to read input file: %v", err)
+		return true, err
+	}
+	defer fin.Close()
+
+	rc := domain.RunConfig{
+		TimeLimit:    time.Millisecond * time.Duration(problemInfo.TimeLimit),
+		MemoryLimit:  memory.Memory(problemInfo.MemoryLimit),
+		Meta:         true,
+		Stdout:       fout,
+		Stdin:        fin,
+		MaxProcesses: 1,
+	}
+
+	i.Logger.Debug().Msgf("Start to run the code, config is: %v", rc)
+	err = lang.Run(i, &rc, req)
+	if err != nil {
+		return true, err
+	}
+
+	vert, err := judgeutils.CheckRunStatus(i, req.SubmissionId)
+
+	i.Logger.Debug().Msgf("Run Status from MetaFile: %v", vert)
+	if err != nil {
+		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
+		return true, err
+	}
+
+	*curCpu = max(*curCpu, vert.Time)
+	*curMem = max(*curMem, vert.MaxRss)
+
+	tcAnsAddtr, e := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.OUTPUT), tc)
+	err = e
+	if err != nil {
+		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
+		return true, err
+	}
+	checkerLocation, e := js.problemService.GetCheckerAddr(req.ProblemId)
+	err = e
+	if err != nil {
+		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
+		return true, err
+	}
+
+	cvert, msg, e := js.checkVerdict(vert, checkerLocation, tcInputAddr, outaddr, tcAnsAddtr)
+	err = e
+	if err != nil {
+		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
+		return true, err
+	}
+
+	curSuccess := tc
+	if cvert != domain.ACCEPTED {
+		curSuccess -= 1
+	}
+	err = js.updateCase(
+		ctx,
+		req.EvalId,
+		cvert,
+		vert.Time,
+		vert.MaxRss,
+		msg,
+		1,
+		*curCpu,
+		*curMem,
+		curSuccess,
+	)
+
+	if err != nil {
+		i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
+		return true, err
+	}
+
+	if cvert != domain.ACCEPTED {
+		err = js.updateFinal(
+			ctx,
+			req.EvalId,
+			cvert,
+			*curCpu,
+			*curMem,
+			tc-1,
+			0,
+			msg,
+		)
+		if err != nil {
+			i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
+		}
+		(*js.pService).Put(i)
+		return true, nil
+	}
+	return false, nil
+}
+
+func (js *JudgeServiceImpl) JudgeICPC(
+	ctx context.Context,
+	i *domain.Isolate,
+	lang pkg.Language,
+	req *isolateservice.SubmissionRequest,
+	problemInfo *problem.ProblemServiceGetOutput,
+) error {
 	var (
 		err error
 	)
-	defer func(e *error) {
-		judgeutils.ReturnIsolateIfFail(js.pService, i, *e)
-	}(&err)
+	defer func() {
+		if err != nil {
+			judgeutils.ReturnIsolateIfFail(js.pService, i, err)
+		}
+	}()
 
 	var (
 		curCpuTime     float64       = 0
 		curMemoryUsage memory.Memory = 0
 	)
-
 	for tc := 1; tc <= problemInfo.TestNum; tc += 1 {
-		tcInputAddr, e := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.INPUT), tc)
+		done, e := js.RunCase(ctx, i, lang, req, problemInfo, tc, &curCpuTime, &curMemoryUsage)
 		err = e
-		if err != nil {
-			i.Logger.Debug().Msgf("Error when fetching testcase: %v", err)
-			// err = js.evalRepo.UpdateVerdict(ctx, req.EvalId, domain.JUDGEMENT_FAILED)
-			err = js.updateFinal(
-				ctx,
-				req.EvalId,
-				domain.JUDGEMENT_FAILED,
-				curCpuTime,
-				curMemoryUsage,
-				tc-1,
-				0,
-				JudgementFailedMessage,
-			)
-
-			if err != nil {
-				i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
-			}
-			return err
-		}
-
-		outaddr := utils.GetSubmissionDir(i, req.SubmissionId) + "/output_" + strconv.Itoa(tc)
-		i.Logger.Debug().Msgf("Output dir: %s", outaddr)
-		fout, e := os.Create(outaddr)
-		err = e
-		if err != nil {
-			i.Logger.Panic().Msgf("Error occured when trying to create new output file: %v", err)
-
-		}
-
-		fin, e := os.Open(tcInputAddr)
-		err = e
-		if err != nil {
-			i.Logger.Panic().Msgf("Error occured when trying to read input file: %v", err)
-		}
-
-		rc := domain.RunConfig{
-			TimeLimit:    time.Millisecond * time.Duration(problemInfo.TimeLimit),
-			MemoryLimit:  memory.Memory(problemInfo.MemoryLimit),
-			Meta:         true,
-			Stdout:       fout,
-			Stdin:        fin,
-			MaxProcesses: 1,
-		}
-
-		i.Logger.Debug().Msgf("Start to run the code, config is: %v", rc)
-		lang.Run(i, &rc, req)
-		fin.Close()
-
-		vert, e := judgeutils.CheckRunStatus(i, req.SubmissionId)
-		err = e
-
-		i.Logger.Debug().Msgf("Run Status from MetaFile: %v", vert)
-		if err != nil {
-
-			err = js.updateFinal(
-				ctx,
-				req.EvalId,
-				domain.JUDGEMENT_FAILED,
-				curCpuTime,
-				curMemoryUsage,
-				tc-1,
-				0,
-				JudgementFailedMessage,
-			)
-
-			if err != nil {
-				i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
-			}
-			return err
-		}
-
-		curCpuTime = max(curCpuTime, vert.Time)
-		curMemoryUsage = max(curMemoryUsage, vert.MaxRss)
-
-		tcAnsAddtr, e := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.OUTPUT), tc)
-		err = e
-		if err != nil {
-			err = js.updateFinal(
-				ctx,
-				req.EvalId,
-				domain.JUDGEMENT_FAILED,
-				curCpuTime,
-				curMemoryUsage,
-				tc-1,
-				0,
-				vert.Message,
-			)
-			return err
-		}
-		checkerLocation, e := js.problemService.GetCheckerAddr(req.ProblemId)
-		err = e
-		if err != nil {
-			err = js.updateFinal(
-				ctx,
-				req.EvalId,
-				domain.JUDGEMENT_FAILED,
-				curCpuTime,
-				curMemoryUsage,
-				tc-1,
-				0,
-				vert.Message,
-			)
-			return err
-		}
-
-		cvert, msg, e := js.checkVerdict(vert, checkerLocation, tcInputAddr, outaddr, tcAnsAddtr)
-		err = e
-		if err != nil {
-			err = js.updateFinal(
-				ctx,
-				req.EvalId,
-				domain.JUDGEMENT_FAILED,
-				curCpuTime,
-				curMemoryUsage,
-				tc-1,
-				0,
-				vert.Message,
-			)
-			return err
-		}
-
-		// err = js.evalRepo.UpdateCase(ctx, req.EvalId, cvert, vert.Time, vert.MaxRss, msg, 1)
-		curSuccess := tc
-		if cvert != domain.ACCEPTED {
-			curSuccess -= 1
-		}
-		err = js.updateCase(
-			ctx,
-			req.EvalId,
-			cvert,
-			vert.Time,
-			vert.MaxRss,
-			msg,
-			1,
-			curCpuTime,
-			curMemoryUsage,
-			curSuccess,
-		)
-
-		if err != nil {
-			i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
-		}
-		if cvert != domain.ACCEPTED {
-			err = js.updateFinal(
-				ctx,
-				req.EvalId,
-				cvert,
-				curCpuTime,
-				curMemoryUsage,
-				tc-1,
-				0,
-				msg,
-			)
-			if err != nil {
-				i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
-			}
+		if done {
 			(*js.pService).Put(i)
-			return nil
 		}
 	}
 

@@ -11,6 +11,7 @@ import (
 type SubmissionUsecase interface {
 	SubmitSubmission(ctx context.Context, input *SubmitSubmissionInput) (output *SubmitSubmissionResponse, err error)
 	GetSubmission(ctx context.Context, input *GetSubmissionInput) (output *GetSubmissionOutput, err error)
+	GetProblemSubmission(ctx context.Context, input *GetProblemSubmissionInput)
 }
 
 type (
@@ -53,5 +54,11 @@ type (
 		Language        string                  `json:"language,omitempty"`
 		SourceCode      string                  `json:"source_code,omitempty"`
 		EvalStatus      domain.SubmissionStatus `json:"eval_status,omitempty"`
+	}
+
+	GetProblemSubmissionInput struct {
+		ProblemId   string
+		GetUsername string
+		Username    string
 	}
 )
