@@ -9,6 +9,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission"
+	usecasews "github.com/bibimoni/Online-judge/submission-judge/src/usecase/wssubmission"
 )
 
 func GetSubmission(
@@ -64,6 +65,48 @@ func GetSubmission(
 		Language:        lang.DisplayName(),
 		SourceCode:      (*source).SourceCode,
 		EvalStatus:      (*eval).EvalStatus,
+	}
+
+	return &returnVal, nil
+}
+
+func GetSubmissionWithoutSourceCode(
+	ctx context.Context,
+	evalRepo erepository.EvaluationRepository,
+	sourcecodeRepo screpository.SourcecodeRepository,
+	submissionRepo srepository.SubmissionRepository,
+	submissionId string,
+) (*usecasews.WSSubmissionResponse, error) {
+
+	sub, err := GetSubmission(
+		ctx,
+		evalRepo,
+		sourcecodeRepo,
+		submissionRepo,
+		submissionId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	returnVal := usecasews.WSSubmissionResponse{
+		Username:        sub.Username,
+		SubmissionId:    submissionId,
+		ProblemId:       sub.ProblemId,
+		Timestamp:       sub.Timestamp,
+		Language:        sub.Language,
+		Verdict:         sub.Verdict,
+		VerdictCase:     sub.VerdictCase,
+		CpuTime:         sub.CpuTime,
+		CpuTimeCase:     sub.CpuTimeCase,
+		MemoryUsage:     sub.MemoryUsage,
+		MemoryUsageCase: sub.MemoryUsageCase,
+		NSuccess:        sub.NSuccess,
+		Outputs:         sub.Outputs,
+		Points:          sub.Points,
+		PointsCase:      sub.PointsCase,
+		Message:         sub.Message,
+		EvalStatus:      sub.EvalStatus,
 	}
 
 	return &returnVal, nil

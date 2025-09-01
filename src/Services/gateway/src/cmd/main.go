@@ -22,6 +22,7 @@ func main() {
 
 	r.Route("/api/v1/submission", func(r chi.Router) {
 		r.Method("GET", "/view/*", proxy.SubmissionApiProxy())
+		r.Method("GET", "/problem/view/*", proxy.SubmissionApiProxy())
 		r.With(middlewares.WithAuth).Method("POST", "/submit", proxy.SubmissionApiProxy())
 		r.Handle("/ws", proxy.WSSubmissionProxy(cfg.Endpoints.Submission))
 	})

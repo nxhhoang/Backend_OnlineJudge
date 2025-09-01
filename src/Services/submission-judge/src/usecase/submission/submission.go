@@ -6,6 +6,7 @@ import (
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
+	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/wssubmission"
 )
 
 type SubmissionUsecase interface {
@@ -57,8 +58,10 @@ type (
 	}
 
 	GetProblemSubmissionInput struct {
-		ProblemId   string
-		GetUsername string
-		Username    string
+		ProblemId string
+	}
+
+	GetProblemSubmissionOutput struct {
+		Submissions []usecase.WSSubmissionResponse
 	}
 )

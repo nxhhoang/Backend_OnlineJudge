@@ -25,7 +25,6 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 	isubmission_utils "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission/utils"
-	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/wssubmission"
 )
 
 type JudgeServiceImpl struct {
@@ -523,7 +522,7 @@ func (js *JudgeServiceImpl) updateWS(ctx context.Context, evalId string) error {
 		return err
 	}
 
-	sub, err := isubmission_utils.GetSubmission(
+	wsUpdate, err := isubmission_utils.GetSubmissionWithoutSourceCode(
 		ctx,
 		js.evalRepo,
 		js.sourcecodeRepo,
@@ -535,25 +534,5 @@ func (js *JudgeServiceImpl) updateWS(ctx context.Context, evalId string) error {
 		return err
 	}
 
-	wsUpdate := usecase.WSSubmissionResponse{
-		Username:        sub.Username,
-		SubmissionId:    eval.SubmissionId.Hex(),
-		ProblemId:       sub.ProblemId,
-		Timestamp:       sub.Timestamp,
-		Language:        sub.Language,
-		Verdict:         sub.Verdict,
-		VerdictCase:     sub.VerdictCase,
-		CpuTime:         sub.CpuTime,
-		CpuTimeCase:     sub.CpuTimeCase,
-		MemoryUsage:     sub.MemoryUsage,
-		MemoryUsageCase: sub.MemoryUsageCase,
-		NSuccess:        sub.NSuccess,
-		Outputs:         sub.Outputs,
-		Points:          sub.Points,
-		PointsCase:      sub.PointsCase,
-		Message:         sub.Message,
-		EvalStatus:      sub.EvalStatus,
-	}
-
-	return js.redisRepo.PulishSubmission(ctx, wsUpdate)
+	return js.redisRepo.PulishSubmission(ctx, *wsUpdate)
 }

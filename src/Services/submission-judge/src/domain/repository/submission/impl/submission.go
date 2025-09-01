@@ -9,6 +9,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type SubmissionRepositoryImpl struct {
@@ -25,15 +26,35 @@ func NewSubmissionRepository(db *mongo.Database) repository.SubmissionRepository
 	return NewSubmissionRepositoryImpl(db)
 }
 
+func (sr *SubmissionRepositoryImpl) FindAllProblemSubmissionIds(ctx context.Context, problemId string) ([]string, error) {
+	filter := bson.M{"problem_id": problemId}
+	opts := options.Find().SetProjection(bson.M{"_id": 1})
+
+	cursor, err := sr.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var ids []string
+	for cursor.Next(ctx) {
+		var doc struct {
+			ID bson.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+		}
+
+		if err := cursor.Decode(&doc); err != nil {
+			return nil, err
+		}
+		ids = append(ids, doc.ID.Hex())
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return ids, nil
+}
+
 func (sr *SubmissionRepositoryImpl) CreateSubmission(ctx context.Context, params repository.CreateSubmissionInput) (string, error) {
-	// sourcecodeId, err := bson.ObjectIDFromHex(params.SourceCodeId)
-	// if err != nil {
-	// 	return "", err
-	// }
-	// evalId, err := bson.ObjectIDFromHex(params.EvalId)
-	// if err != nil {
-	// 	return "", err
-	// }
 	newSubmission := domain.Submission{
 		Username:  params.Username,
 		ProblemId: params.ProblemId,

@@ -19,6 +19,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/problem"
 	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission"
 	isubmission_utils "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission/utils"
+	usecasews "github.com/bibimoni/Online-judge/submission-judge/src/usecase/wssubmission"
 )
 
 type SubmissionInteractor struct {
@@ -70,8 +71,6 @@ func (si *SubmissionInteractor) SubmitSubmission(ctx context.Context, input *use
 		return nil, err
 	}
 
-	log.Info().Msgf("%v", problemInfo)
-
 	evalId, err := si.evalRepo.CreateEval(ctx, submissionId, problemInfo.TimeLimit, memory.Memory(problemInfo.MemoryLimit), problemInfo.TestNum)
 	if err != nil {
 		return nil, err
@@ -111,4 +110,25 @@ func (si *SubmissionInteractor) GetSubmission(ctx context.Context, input *usecas
 		si.submissionRepo,
 		input.SubmissionId,
 	)
+}
+
+func (si *SubmissionInteractor) GetProblemSubmission(ctx context.Context, input *usecase.GetProblemSubmissionInput) (*usecase.GetProblemSubmissionOutput, error) {
+	strs, err := si.submissionRepo.FindAllProblemSubmissionIds(ctx, input.ProblemId)
+	if err != nil {
+		return nil, err
+	}
+
+	config.GetLogger().Debug().Msgf("strings: %v", strs)
+	var problemSubmissions []usecasews.WSSubmissionResponse
+	for _, str := range strs {
+		item, err := isubmission_utils.GetSubmissionWithoutSourceCode(ctx, si.evalRepo, si.sourcecodeRepo, si.submissionRepo, str)
+		if err != nil {
+			return nil, err
+		}
+		problemSubmissions = append(problemSubmissions, *item)
+	}
+
+	return &usecase.GetProblemSubmissionOutput{
+		Submissions: problemSubmissions,
+	}, nil
 }

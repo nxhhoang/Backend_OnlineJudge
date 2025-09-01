@@ -13,4 +13,5 @@ func RegisterRouter(group *gin.RouterGroup, appContext appctx.AppContext) {
 	submission.POST("/submit", transportsubmitsubmission.HandleSubmitSubmissionRequest(appContext))
 	submission.GET("/view/:submission_id", transportgetsubmission.HandleGetSubmissionRequest(appContext))
 	submission.GET("/ws", websocketsubmission.HandleSubmissionWSRequest(appContext))
+	submission.GET("/problem/view/:problem_id", transportgetsubmission.HandleGetProblemSubmissionRequest(appContext))
 }
