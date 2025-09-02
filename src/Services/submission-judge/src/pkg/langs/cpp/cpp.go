@@ -42,7 +42,7 @@ func (cpp Cpp) ExecutableName() string {
 func (cpp Cpp) Run(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.SubmissionRequest) error {
 	i.Logger.Info().Msgf("Start running source code with id: %s", req.SubmissionId)
 
-	return req.IService.RunBinary(
+	return req.IService.Run(
 		i, *rc, req, cpp.ExecutableName(),
 	)
 }

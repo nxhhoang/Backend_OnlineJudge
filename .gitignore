@@ -4,3 +4,5 @@ problem-db-data/
 redis-submission-judge/
 /storage/
 postgres-data/
+**/main
+**/tmp/

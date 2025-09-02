@@ -19,6 +19,9 @@ cd $workdir
 [ -f scoring.tex ] && printf "%smyheading{Chấm điểm}\n\n" "\\" | cat - scoring.tex 2>/dev/null > tmp && mv tmp scoring.tex
 touch scoring.tex
 
+[ -f output.tex ] && printf "%smyheading{Đầu ra}\n\n" "\\" | cat - output.tex 2>/dev/null > tmp && mv tmp output.tex
+touch output.tex
+
 ./gen_pdf.sh || exit -1
 
 cp ./statement.pdf "$dest" || exit -1

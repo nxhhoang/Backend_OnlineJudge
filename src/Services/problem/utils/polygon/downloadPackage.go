@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/antchfx/xmlquery"
 	"github.com/xyproto/unzip"
 )
 
@@ -106,6 +107,27 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 	cmd.Stderr = &errBuffer
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error compiling checker: %s", errBuffer.String())
+	}
+
+	// compile interactor (in interactive problems)
+	f, err = os.Open(tempdir + "/problem.xml")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	doc, err := xmlquery.Parse(f)
+	if err != nil {
+		return err
+	}
+
+	interactor_file := xmlquery.FindOne(doc, "/problem/assets/interactor")
+	if interactor_file != nil {
+		cmd = exec.Command("scripts/compile_interactor/main.sh", tempdir, dirpath)
+		cmd.Stderr = &errBuffer
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("error compiling interactor: %s", errBuffer.String())
+		}
 	}
 
 	return err

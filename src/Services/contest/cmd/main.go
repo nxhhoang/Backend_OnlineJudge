@@ -4,6 +4,8 @@ import (
 	"os"
 
 	database "contest/internal/infrastructure/database"
+	infrastructure "contest/internal/infrastructure/redis"
+	"contest/routes"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
@@ -32,6 +34,13 @@ func main() {
 	if err := database.GetMongoDbClient(); err != nil {
 		panic(err)
 	}
+
+	if err := infrastructure.GetRedisClient(); err != nil {
+		panic(err)
+	}
+
+	routes.ScoreboardRoutes(app)
+	routes.ContestRoutes(app)
 
 	serverAddr := host + ":" + port
 	app.Listen(serverAddr)
