@@ -22,6 +22,18 @@ touch scoring.tex
 [ -f output.tex ] && printf "%smyheading{Đầu ra}\n\n" "\\" | cat - output.tex 2>/dev/null > tmp && mv tmp output.tex
 touch output.tex
 
+[ -f input.tex ] && printf "%smyheading{Đầu vào}\n\n" "\\" | cat - input.tex 2>/dev/null > tmp && mv tmp input.tex
+touch input.tex
+
+[ -f examples.tex ] && printf "%smyheading{Ví dụ}\n\n" "\\" | cat - examples.tex 2>/dev/null > tmp && mv tmp examples.tex
+touch examples.tex
+
+[ -f notes.tex ] && printf "%smyheading{Chú thích}\n\n" "\\" | cat - notes.tex 2>/dev/null > tmp && mv tmp notes.tex
+touch notes.tex
+
+# [ -f interaction.tex ] && printf "%smyheading{Interaction}\n\n" "\\" | cat - interaction.tex 2>/dev/null > tmp && mv tmp interaction.tex
+touch interaction.tex
+
 ./gen_pdf.sh || exit -1
 
 cp ./statement.pdf "$dest" || exit -1
