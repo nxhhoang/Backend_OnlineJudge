@@ -12,6 +12,8 @@ type Problem struct {
 	TestNum     uint64 `json:"test-num" bson:"test-num"`
 	TimeLimit   uint64 `json:"time-limit" bson:"time-limit"`
 	MemoryLimit uint64 `json:"memory-limit" bson:"memory-limit"`
+
+	IsInteractive bool `json:"is-interactive" bson:"is-interactive"`
 }
 
 type Package struct {

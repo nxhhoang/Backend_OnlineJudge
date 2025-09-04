@@ -85,10 +85,6 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return err
 	}
 
-	if err := utils.SaveProblemToJson(problem, dirpath+"/problem.json"); err != nil {
-		return err
-	}
-
 	var errBuffer bytes.Buffer
 
 	cmd := exec.Command("scripts/get_tests/main.sh", tempdir, dirpath)
@@ -128,6 +124,12 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("error compiling interactor: %s", errBuffer.String())
 		}
+
+		problem.IsInteractive = true
+	}
+
+	if err := utils.SaveProblemToJson(problem, dirpath+"/problem.json"); err != nil {
+		return err
 	}
 
 	return err
