@@ -99,12 +99,6 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return fmt.Errorf("error creating statement: %s", errBuffer.String())
 	}
 
-	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, dirpath)
-	cmd.Stderr = &errBuffer
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error compiling checker: %s", errBuffer.String())
-	}
-
 	// compile interactor (in interactive problems)
 	f, err = os.Open(tempdir + "/problem.xml")
 	if err != nil {
@@ -117,12 +111,26 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return err
 	}
 
+	checker_file := tempdir + "/" + xmlquery.FindOne(doc, "/problem/assets/checker/source").SelectAttr("path")
+	print(checker_file)
+	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, checker_file, dirpath)
+	cmd.Stderr = &errBuffer
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("error compiling checker: %s", errBuffer.String())
+	}
+
 	interactor_file := xmlquery.FindOne(doc, "/problem/assets/interactor")
 	if interactor_file != nil {
-		cmd = exec.Command("scripts/compile_interactor/main.sh", tempdir, dirpath)
+		cmd = exec.Command("scripts/handle_interactive_problem/compile_interactor.sh", tempdir, dirpath)
 		cmd.Stderr = &errBuffer
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("error compiling interactor: %s", errBuffer.String())
+		}
+
+		cmd = exec.Command("scripts/handle_interactive_problem/get_files.sh", tempdir, dirpath)
+		cmd.Stderr = &errBuffer
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("error getting interactive-related files: %s", errBuffer.String())
 		}
 
 		problem.IsInteractive = true
