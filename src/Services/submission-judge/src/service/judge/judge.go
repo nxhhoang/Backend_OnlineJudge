@@ -33,6 +33,7 @@ type JudgeService interface {
 		tc int,
 		curCpu *float64,
 		curMem *memory.Memory,
+		isInteractive bool,
 	) (done bool, err error)
 }
 

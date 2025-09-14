@@ -3,6 +3,7 @@ package impl
 import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/langs/cpp"
+	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/langs/pypy3"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/langs/python3"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/store"
 )
@@ -35,6 +36,9 @@ func NewStoreWithDefaultLangs() store.StoreService {
 		storeService.Register(option)
 	}
 	for _, option := range python3.GetAllOptions() {
+		storeService.Register(option)
+	}
+	for _, option := range pypy3.GetAllOptions() {
 		storeService.Register(option)
 	}
 	return storeService
