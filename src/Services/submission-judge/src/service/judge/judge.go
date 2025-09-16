@@ -13,8 +13,27 @@ import (
 
 type JudgeService interface {
 	Judge(ctx context.Context, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error
-	JudgeStart(ctx context.Context, i *domain.Isolate, lang pkg.Language, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error
+	JudgeStart(ctx context.Context, lang pkg.Language, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error
 	Prep(ctx context.Context, i *domain.Isolate, lang pkg.Language, req *isolateservice.SubmissionRequest, problemInfo *problem.ProblemServiceGetOutput) error
+	OnFail(
+		ctx context.Context,
+		i *domain.Isolate,
+		evalId string,
+		curCpu float64,
+		curMem memory.Memory,
+		tcSuccess int,
+		msg string,
+	)
+	RunCase(
+		ctx context.Context,
+		i *domain.Isolate,
+		lang pkg.Language,
+		req *isolateservice.SubmissionRequest,
+		problemInfo *problem.ProblemServiceGetOutput,
+		tc int,
+		curCpu *float64,
+		curMem *memory.Memory,
+	) (done bool, err error)
 }
 
 type RunVerdict struct {
@@ -35,3 +54,4 @@ type RunVerdict struct {
 
 var CompilationError = errors.New("Compilation Error")
 var JugdgementFailed = errors.New("Something went wrong when trying to run the source code")
+var UnsupportedSubmissionType = errors.New("This type of problem isn't supported")

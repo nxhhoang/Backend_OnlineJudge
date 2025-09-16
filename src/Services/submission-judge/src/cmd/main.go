@@ -33,9 +33,14 @@ func main() {
 		log.Fatal().Err(err).Msgf("Can't initialize new pool service")
 	}
 
-	store.DefaultStore = si.NewStoreWithDefaultLangs()
+	redis, err := database.GetRedisClient()
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Can't initialize redis client")
+	}
 
-	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name), &pool)
+	appCtx := appctx.NewAppContext(client.Database(cfg.Database.Name), &pool, redis)
+
+	store.DefaultStore = si.NewStoreWithDefaultLangs()
 
 	r := gin.New()
 	r.Use(gin.Recovery())

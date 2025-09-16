@@ -71,18 +71,18 @@ func (cs *CheckerServiceImpl) RunChecker(checkerAddr, inputAddr, outputAddr, ans
 	log.Debug().Msgf("Message: %s, exit code: %v", msg, err)
 
 	if err == nil {
-		return mapExitCodeToVerdict(0), 0, msg, nil
+		return MapExitCodeToVerdict(0), 0, msg, nil
 	}
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
 		code := exitErr.ExitCode()
-		return mapExitCodeToVerdict(code), code, msg, nil
+		return MapExitCodeToVerdict(code), code, msg, nil
 	}
 	return "", -1, "", err
 }
 
-func mapExitCodeToVerdict(code int) domain.Verdict {
+func MapExitCodeToVerdict(code int) domain.Verdict {
 	switch code {
 	case 0:
 		return domain.ACCEPTED

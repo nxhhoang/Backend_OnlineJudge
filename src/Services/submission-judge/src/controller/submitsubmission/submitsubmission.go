@@ -4,14 +4,8 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/common"
 	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
 	"github.com/bibimoni/Online-judge/submission-judge/src/controller"
+	controller_utils "github.com/bibimoni/Online-judge/submission-judge/src/controller/utils"
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
-	ei "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/evaluation/impl"
-	sci "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode/impl"
-	si "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
-	checkerimpl "github.com/bibimoni/Online-judge/submission-judge/src/service/checker/impl"
-	ji "github.com/bibimoni/Online-judge/submission-judge/src/service/judge/impl"
-	pi "github.com/bibimoni/Online-judge/submission-judge/src/service/problem/impl"
-	"github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission/interactor"
 	"github.com/gin-gonic/gin"
 
 	"fmt"
@@ -21,20 +15,10 @@ import (
 )
 
 func HandleSubmitSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc {
-	log := config.GetLogger()
-
-	db := appContext.GetMainDbConnection()
-	submissionRepo := si.NewSubmissionRepository(db)
-	sourcecodeRepo := sci.NewSourcecodeRepository(db)
-	problemSvc, err := pi.NewProblemService()
-	evalRepo := ei.NewEvaluationRepository(db)
-	checker := checkerimpl.NewCheckerService()
-	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool(), problemSvc, evalRepo, checker)
+	submissionInteractor, err := controller_utils.InitInteractor(appContext)
 	if err != nil {
-		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil
 	}
-	submissionInteractor := interactor.NewSubmissionInteractor(submissionRepo, sourcecodeRepo, problemSvc, judgeSvc, evalRepo)
 
 	return common.InvokeUseCase(
 		toSubmitSubmissionType,

@@ -10,6 +10,7 @@ import (
 type SubmissionRepository interface {
 	CreateSubmission(ctx context.Context, params CreateSubmissionInput) (string, error)
 	FindSubmission(ctx context.Context, submissionId string) (*domain.Submission, error)
+	FindAllProblemSubmissionIds(ctx context.Context, problemId string) ([]string, error)
 }
 
 type CreateSubmissionInput struct {

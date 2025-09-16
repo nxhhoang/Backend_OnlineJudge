@@ -3,41 +3,46 @@ package transportgetsubmission
 import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/common"
 	appctx "github.com/bibimoni/Online-judge/submission-judge/src/components"
-	"github.com/bibimoni/Online-judge/submission-judge/src/controller"
-	ei "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/evaluation/impl"
-	sci "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode/impl"
-	si "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
-	checkerimpl "github.com/bibimoni/Online-judge/submission-judge/src/service/checker/impl"
-	ji "github.com/bibimoni/Online-judge/submission-judge/src/service/judge/impl"
-	pi "github.com/bibimoni/Online-judge/submission-judge/src/service/problem/impl"
-	"github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission/interactor"
+	helper "github.com/bibimoni/Online-judge/submission-judge/src/controller"
+	controller_utils "github.com/bibimoni/Online-judge/submission-judge/src/controller/utils"
 	"github.com/gin-gonic/gin"
 
 	"github.com/bibimoni/Online-judge/submission-judge/src/infrastructure/config"
-	"github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission"
+	usecase "github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission"
 )
 
 func HandleGetSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc {
-	log := config.GetLogger()
-
-	db := appContext.GetMainDbConnection()
-	submissionRepo := si.NewSubmissionRepository(db)
-	sourcecodeRepo := sci.NewSourcecodeRepository(db)
-	problemSvc, err := pi.NewProblemService()
-	evalRepo := ei.NewEvaluationRepository(db)
-	checker := checkerimpl.NewCheckerService()
-	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool(), problemSvc, evalRepo, checker)
+	submissionInteractor, err := controller_utils.InitInteractor(appContext)
 	if err != nil {
-		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil
 	}
-	submissionInteractor := interactor.NewSubmissionInteractor(submissionRepo, sourcecodeRepo, problemSvc, judgeSvc, evalRepo)
 
 	return common.InvokeUseCase(
 		toGetSubmissionType,
 		submissionInteractor.GetSubmission,
-		helper.WriteCreatedOutput,
+		helper.WriteSuccessOutput,
 	)
+}
+
+func HandleGetProblemSubmissionRequest(appContext appctx.AppContext) gin.HandlerFunc {
+	submissionInteractor, err := controller_utils.InitInteractor(appContext)
+	if err != nil {
+		return nil
+	}
+	return common.InvokeUseCase(
+		toGetProblemSubmissionType,
+		submissionInteractor.GetProblemSubmission,
+		helper.WriteSuccessOutput,
+	)
+}
+
+func toGetProblemSubmissionType(c *gin.Context) (*usecase.GetProblemSubmissionInput, error) {
+	pid := c.Param("problem_id")
+	log := config.GetLogger()
+	log.Debug().Msgf("get problem id from request: %s", pid)
+	return &usecase.GetProblemSubmissionInput{
+		ProblemId: pid,
+	}, nil
 }
 
 func toGetSubmissionType(c *gin.Context) (*usecase.GetSubmissionInput, error) {

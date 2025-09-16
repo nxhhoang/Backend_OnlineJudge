@@ -2,5 +2,9 @@
 submission-judge-db-data/
 problem-db-data/
 redis-submission-judge/
+contest-db-data/
 /storage/
 postgres-data/
+scoreboard_redis/
+**/main
+**/tmp/

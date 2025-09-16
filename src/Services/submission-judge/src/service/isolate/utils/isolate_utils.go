@@ -73,6 +73,90 @@ func CopyChecker(i *domain.Isolate, submissionId string, checkerLocation string)
 
 	return nil
 }
+
+func CopyInteractor(i *domain.Isolate, submissionId string, interactorLocation string) error {
+	in, err := os.Open(interactorLocation)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	interactorNewAddr := GetIsolateDir(i) + "/" + submissionId + "/" + cfg.InteractorBinName
+
+	out, err := os.Create(interactorNewAddr)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if cerr := out.Close(); err == nil {
+			err = cerr
+		}
+	}()
+
+	if _, err = io.Copy(out, in); err != nil {
+		return err
+	}
+
+	if err = out.Sync(); err != nil {
+		return err
+	}
+
+	info, err := os.Stat(interactorLocation)
+	if err != nil {
+		return err
+	}
+	if err = os.Chmod(interactorNewAddr, info.Mode()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CopyCrossRun(i *domain.Isolate, submissionId string, crossrunLocation string) error {
+	in, err := os.Open(crossrunLocation)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	crossrunNewAddr := GetIsolateDir(i) + "/" + submissionId + "/" + cfg.CrossRunJarName
+
+	out, err := os.Create(crossrunNewAddr)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if cerr := out.Close(); err == nil {
+			err = cerr
+		}
+	}()
+
+	if _, err = io.Copy(out, in); err != nil {
+		return err
+	}
+
+	if err = out.Sync(); err != nil {
+		return err
+	}
+
+	info, err := os.Stat(crossrunLocation)
+	if err != nil {
+		return err
+	}
+	if err = os.Chmod(crossrunNewAddr, info.Mode()); err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetMetaFilePath(i *domain.Isolate, submissionId string) (string, error) {
 	if !i.Inited {
 		return "", isolateservice.ErrorIsolateNotInitialized

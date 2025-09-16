@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/antchfx/xmlquery"
 	"github.com/xyproto/unzip"
 )
 
@@ -84,10 +85,6 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return err
 	}
 
-	if err := utils.SaveProblemToJson(problem, dirpath+"/problem.json"); err != nil {
-		return err
-	}
-
 	var errBuffer bytes.Buffer
 
 	cmd := exec.Command("scripts/get_tests/main.sh", tempdir, dirpath)
@@ -102,10 +99,44 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 		return fmt.Errorf("error creating statement: %s", errBuffer.String())
 	}
 
-	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, dirpath)
+	// compile interactor (in interactive problems)
+	f, err = os.Open(tempdir + "/problem.xml")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	doc, err := xmlquery.Parse(f)
+	if err != nil {
+		return err
+	}
+
+	checker_file := tempdir + "/" + xmlquery.FindOne(doc, "/problem/assets/checker/source").SelectAttr("path")
+	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, checker_file, dirpath)
 	cmd.Stderr = &errBuffer
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error compiling checker: %s", errBuffer.String())
+	}
+
+	interactor_file := xmlquery.FindOne(doc, "/problem/assets/interactor")
+	if interactor_file != nil {
+		cmd = exec.Command("scripts/handle_interactive_problem/compile_interactor.sh", tempdir, dirpath)
+		cmd.Stderr = &errBuffer
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("error compiling interactor: %s", errBuffer.String())
+		}
+
+		cmd = exec.Command("scripts/handle_interactive_problem/get_files.sh", tempdir, dirpath)
+		cmd.Stderr = &errBuffer
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("error getting interactive-related files: %s", errBuffer.String())
+		}
+
+		problem.IsInteractive = true
+	}
+
+	if err := utils.SaveProblemToJson(problem, dirpath+"/problem.json"); err != nil {
+		return err
 	}
 
 	return err

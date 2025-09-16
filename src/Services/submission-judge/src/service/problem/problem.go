@@ -11,6 +11,8 @@ type ProblemService interface {
 	GetTestCaseAddr(problemId string, tcType TestCaseType, testNum int) (string, error)
 	GetTestCaseDirAddr(problemId string, tcType TestCaseType) (string, error)
 	GetCheckerAddr(problemId string) (string, error)
+	GetInteractorAddr(problemId string) (string, error)
+	GetCrossRunAddr(problemId string) (string, error)
 }
 
 type TestCaseType string
@@ -21,12 +23,13 @@ const (
 )
 
 type ProblemServiceGetOutput struct {
-	ID          string   `json:"ID,omitempty"`
-	ProblemId   int64    `json:"problem-id,omitempty"`
-	Name        string   `json:"name,omitempty"`
-	ShortName   string   `json:"short-name,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
-	TestNum     int      `json:"test-num,omitempty"`
-	TimeLimit   int      `json:"time-limit,omitempty"`
-	MemoryLimit int64    `json:"memory-limit,omitempty"`
+	ID            string   `json:"ID,omitempty"`
+	ProblemId     int64    `json:"problem-id,omitempty"`
+	Name          string   `json:"name,omitempty"`
+	ShortName     string   `json:"short-name,omitempty"`
+	Tags          []string `json:"tags,omitempty"`
+	TestNum       int      `json:"test-num,omitempty"`
+	TimeLimit     int      `json:"time-limit,omitempty"`
+	MemoryLimit   int64    `json:"memory-limit,omitempty"`
+	IsInteractive bool     `json:"is-interactive,omitempty"`
 }
