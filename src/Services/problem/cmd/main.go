@@ -50,6 +50,12 @@ func main() {
 		return
 	}
 
+	databaseName := os.Getenv("PROBLEM_DATABASE_NAME")
+	if databaseName == "" {
+		log.Fatalln("Can't get database name")
+		return
+	}
+
 	serverAddr := host + ":" + port
 
 	log.Printf("Problem server is listening on: %s", serverAddr)

@@ -112,7 +112,6 @@ func DownloadPackage(problemId uint64, packageId uint64) error {
 	}
 
 	checker_file := tempdir + "/" + xmlquery.FindOne(doc, "/problem/assets/checker/source").SelectAttr("path")
-	print(checker_file)
 	cmd = exec.Command("scripts/compile_checker/main.sh", tempdir, checker_file, dirpath)
 	cmd.Stderr = &errBuffer
 	if err := cmd.Run(); err != nil {
