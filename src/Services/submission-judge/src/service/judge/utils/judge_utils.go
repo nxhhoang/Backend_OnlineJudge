@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 
 	domain "github.com/bibimoni/Online-judge/submission-judge/src/domain/entitiy"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
+	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/utils"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/judge"
 	poolservice "github.com/bibimoni/Online-judge/submission-judge/src/service/pool"
@@ -18,6 +20,23 @@ import (
 func ReturnIsolateIfFail(pService *poolservice.PoolService, i *domain.Isolate, err error) {
 	i.Logger.Warn().Msgf("Return the isolate because something went wrong: %v", err)
 	(*pService).Put(i)
+}
+
+func ReadInteractiveReportFile(i *domain.Isolate, req *isolateservice.SubmissionRequest) (string, error) {
+	reportFileAddr := GetSubmissionReportFileAddr(i, req)
+
+	file, err := os.Open(reportFileAddr)
+	if err != nil {
+		return "", fmt.Errorf("Can't open meta file: %v", err)
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("Error reading file: %v", err)
+	}
+
+	return string(data), nil
 }
 
 func ParseMetaFile(data []byte) (*judge.RunVerdict, error) {
@@ -114,4 +133,20 @@ func GetCompileMessage(vert *judge.RunVerdict, errBuf string) string {
 		msg = vert.Message
 	}
 	return msg
+}
+
+func GetSubmissionCheckerAddr(i *domain.Isolate, req *isolateservice.SubmissionRequest) string {
+	return utils.GetSubmissionDir(i, req.SubmissionId) + "/checker"
+}
+
+func GetSubmissionInteractorAddr(i *domain.Isolate, req *isolateservice.SubmissionRequest) string {
+	return utils.GetSubmissionDir(i, req.SubmissionId) + "/interactor"
+}
+
+func GetSubmissionCrossRunJarAddr(i *domain.Isolate, req *isolateservice.SubmissionRequest) string {
+	return utils.GetSubmissionDir(i, req.SubmissionId) + "/CrossRun.jar"
+}
+
+func GetSubmissionReportFileAddr(i *domain.Isolate, req *isolateservice.SubmissionRequest) string {
+	return utils.GetSubmissionDir(i, req.SubmissionId) + "/report"
 }

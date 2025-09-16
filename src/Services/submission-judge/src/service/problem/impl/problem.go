@@ -125,7 +125,24 @@ func (ps *ProblemServiceImpl) GetInteractorAddr(problemId string) (string, error
 		return "", err
 	}
 	if !stat {
-		return "", fmt.Errorf("This checker file isn't available")
+		return "", fmt.Errorf("This interactor file isn't available")
+	}
+	return stringAddr, nil
+}
+
+func (ps *ProblemServiceImpl) GetCrossRunAddr(problemId string) (string, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return "", err
+	}
+
+	stringAddr := cfg.ProblemsDir + "/" + problemId + "/CrossRun.jar"
+	stat, err := utils.FileExsits(stringAddr)
+	if err != nil {
+		return "", err
+	}
+	if !stat {
+		return "", fmt.Errorf("This cross run file isn't available")
 	}
 	return stringAddr, nil
 }

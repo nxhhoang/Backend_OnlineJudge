@@ -17,6 +17,7 @@ import (
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg"
 	"github.com/bibimoni/Online-judge/submission-judge/src/pkg/memory"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/checker"
+	"github.com/bibimoni/Online-judge/submission-judge/src/service/interactor"
 	isolateservice "github.com/bibimoni/Online-judge/submission-judge/src/service/isolate"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/isolate/utils"
 	"github.com/bibimoni/Online-judge/submission-judge/src/service/judge"
@@ -28,13 +29,14 @@ import (
 )
 
 type JudgeServiceImpl struct {
-	pService       *poolservice.PoolService
-	problemService problem.ProblemService
-	evalRepo       evalrepository.EvaluationRepository
-	checkerService checker.CheckerService
-	redisRepo      redisrepository.RedisSubmissionRepository
-	submissionRepo subrepository.SubmissionRepository
-	sourcecodeRepo screpository.SourcecodeRepository
+	pService          *poolservice.PoolService
+	problemService    problem.ProblemService
+	evalRepo          evalrepository.EvaluationRepository
+	checkerService    checker.CheckerService
+	interactorService interactor.InteractorService
+	redisRepo         redisrepository.RedisSubmissionRepository
+	submissionRepo    subrepository.SubmissionRepository
+	sourcecodeRepo    screpository.SourcecodeRepository
 }
 
 var CompilationError = errors.New("Compile error!")
@@ -46,18 +48,20 @@ func NewJudgeServiceImpl(
 	problemService problem.ProblemService,
 	evalRepo evalrepository.EvaluationRepository,
 	checkerS checker.CheckerService,
+	interactorS interactor.InteractorService,
 	redis redisrepository.RedisSubmissionRepository,
 	submissionRepo subrepository.SubmissionRepository,
 	sourcecodeRepo screpository.SourcecodeRepository,
 ) *JudgeServiceImpl {
 	return &JudgeServiceImpl{
-		pService:       pService,
-		problemService: problemService,
-		evalRepo:       evalRepo,
-		checkerService: checkerS,
-		redisRepo:      redis,
-		submissionRepo: submissionRepo,
-		sourcecodeRepo: sourcecodeRepo,
+		pService:          pService,
+		problemService:    problemService,
+		evalRepo:          evalRepo,
+		checkerService:    checkerS,
+		interactorService: interactorS,
+		redisRepo:         redis,
+		submissionRepo:    submissionRepo,
+		sourcecodeRepo:    sourcecodeRepo,
 	}
 }
 
@@ -66,11 +70,12 @@ func NewJudgeService(
 	problemService problem.ProblemService,
 	evalRepo evalrepository.EvaluationRepository,
 	checkerS checker.CheckerService,
+	interactorS interactor.InteractorService,
 	redis redisrepository.RedisSubmissionRepository,
 	submissionRepo subrepository.SubmissionRepository,
 	sourcecodeRepo screpository.SourcecodeRepository,
 ) judge.JudgeService {
-	return NewJudgeServiceImpl(pService, problemService, evalRepo, checkerS, redis, submissionRepo, sourcecodeRepo)
+	return NewJudgeServiceImpl(pService, problemService, evalRepo, checkerS, interactorS, redis, submissionRepo, sourcecodeRepo)
 }
 
 // This will be the final wrapper to double check condition, at the end of the function
@@ -137,9 +142,11 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 	)
 
 	// always remember to return the isolate instance
-	defer func(e *error) {
-		judgeutils.ReturnIsolateIfFail(js.pService, i, *e)
-	}(&err)
+	defer func() {
+		if err != nil {
+			judgeutils.ReturnIsolateIfFail(js.pService, i, err)
+		}
+	}()
 
 	_, err = utils.CreateSubmissionSourceFile(i, req.Sourcecode, req.SubmissionId, lang.DefaultFileName())
 	if err != nil {
@@ -180,47 +187,67 @@ func (js *JudgeServiceImpl) Prep(ctx context.Context, i *domain.Isolate, lang pk
 			err = judge.JugdgementFailed
 		}
 
-		i.Logger.Debug().Msgf("Compile error: %v", err)
-		if err != nil {
-			return err
-		}
+	}
+	i.Logger.Debug().Msgf("Compile error: %v", err)
+	if err != nil {
+		return err
 	}
 
-	// Prepare the checker file
-	checkerLocation, e := js.problemService.GetCheckerAddr(req.ProblemId)
-	if e != nil {
+	err = js.prepChecker(ctx, i, req, vert)
+
+	// Prepare the interactor file
+	if problemInfo.IsInteractive {
+		err = js.prepInteractor(ctx, i, req, vert)
+	}
+
+	return nil
+}
+
+func (js *JudgeServiceImpl) prepChecker(ctx context.Context, i *domain.Isolate, req *isolateservice.SubmissionRequest, vert *judge.RunVerdict) error {
+	checkerLocation, err := js.problemService.GetCheckerAddr(req.ProblemId)
+	if err != nil {
 		err = js.updateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, vert.Time, vert.MaxRss, 0, 0, vert.Message)
 		if err != nil {
 			i.Logger.Error().Msgf("Database error, can't update verdict: %v", err)
 		}
-		return e
+		return err
 	}
 	err = utils.CopyChecker(i, (*req).SubmissionId, checkerLocation)
 	if err != nil {
 		return err
 	}
 	i.Logger.Info().Msgf("Checker file copied successfully!")
+	return err
+}
 
-	// Prepare the interactor file
-	if problemInfo.IsInteractive {
-		i.Logger.Debug().Msgf("Start copying the interaction file")
-		interactorLocation, e := js.problemService.GetInteractorAddr(req.ProblemId)
-		if e != nil {
-			err = js.updateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, vert.Time, vert.MaxRss, 0, 0, vert.Message)
-			if err != nil {
-				i.Logger.Error().Msgf("Database error, can't update verdict: %v", err)
-			}
-			return e
-		}
-
-		err = utils.CopyInteractor(i, (*req).SubmissionId, interactorLocation)
+func (js *JudgeServiceImpl) prepInteractor(ctx context.Context, i *domain.Isolate, req *isolateservice.SubmissionRequest, vert *judge.RunVerdict) error {
+	interactorLocation, err := js.problemService.GetInteractorAddr(req.ProblemId)
+	if err != nil {
+		err := js.updateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, vert.Time, vert.MaxRss, 0, 0, vert.Message)
 		if err != nil {
-			return err
+			i.Logger.Error().Msgf("Database error, can't update verdict: %v", err)
 		}
-		i.Logger.Info().Msgf("Interactor file copied successfully!")
+		return err
+	}
+	crossrunLocation, err := js.problemService.GetCrossRunAddr(req.ProblemId)
+	if err != nil {
+		err := js.updateFinal(ctx, req.EvalId, domain.JUDGEMENT_FAILED, vert.Time, vert.MaxRss, 0, 0, vert.Message)
+		if err != nil {
+			i.Logger.Error().Msgf("Database error, can't update verdict: %v", err)
+		}
+		return err
 	}
 
-	return nil
+	err = utils.CopyInteractor(i, (*req).SubmissionId, interactorLocation)
+	if err != nil {
+		return err
+	}
+	err = utils.CopyCrossRun(i, (*req).SubmissionId, crossrunLocation)
+	if err != nil {
+		return err
+	}
+	i.Logger.Info().Msgf("Interactor files (interactor, crossrun) copied successfully!")
+	return err
 }
 
 func (js *JudgeServiceImpl) OnFail(
@@ -246,9 +273,15 @@ func (js *JudgeServiceImpl) RunCase(
 	tc int,
 	curCpu *float64,
 	curMem *memory.Memory,
-	isInteractive bool,
 ) (done bool, err error) {
+	var ivert domain.Verdict
 	tcInputAddr, err := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.INPUT), tc)
+	if err != nil {
+		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
+		return true, err
+	}
+
+	tcAnsAddtr, err := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.OUTPUT), tc)
 	if err != nil {
 		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
 		return true, err
@@ -280,13 +313,29 @@ func (js *JudgeServiceImpl) RunCase(
 	}
 
 	i.Logger.Debug().Msgf("Start to run the code, config is: %v", rc)
-	err = lang.Run(i, &rc, req)
-	if err != nil {
-		return true, err
+	if problemInfo.IsInteractive {
+		runCmd, err := lang.RunCmdStrNoStream(i, &rc, req)
+		if err != nil {
+			return true, nil
+		}
+
+		interactorAddr := judgeutils.GetSubmissionInteractorAddr(i, req)
+		crossrunAddr := judgeutils.GetSubmissionCrossRunJarAddr(i, req)
+		reportAddr := judgeutils.GetSubmissionReportFileAddr(i, req)
+		iivert, _, msg, err := js.interactorService.RunInteractor(crossrunAddr, interactorAddr, tcInputAddr, outaddr, tcAnsAddtr, reportAddr, runCmd)
+		if err != nil {
+			return true, nil
+		}
+		ivert = iivert
+		i.Logger.Debug().Msgf("Interactor response: vert: %v, msg: %s", ivert, msg)
+	} else {
+		err = lang.Run(i, &rc, req)
+		if err != nil {
+			return true, err
+		}
 	}
 
 	vert, err := judgeutils.CheckRunStatus(i, req.SubmissionId)
-
 	i.Logger.Debug().Msgf("Run Status from MetaFile: %v", vert)
 	if err != nil {
 		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
@@ -296,19 +345,26 @@ func (js *JudgeServiceImpl) RunCase(
 	*curCpu = max(*curCpu, vert.Time)
 	*curMem = max(*curMem, vert.MaxRss)
 
-	tcAnsAddtr, e := js.problemService.GetTestCaseAddr(req.ProblemId, problem.TestCaseType(problem.OUTPUT), tc)
-	err = e
-	if err != nil {
-		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
-		return true, err
-	}
-	checkerLocation, e := js.problemService.GetCheckerAddr(req.ProblemId)
-	err = e
-	if err != nil {
-		js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
-		return true, err
+	// checkerLocation, e := js.problemService.GetCheckerAddr(req.ProblemId)
+	// err = e
+	// if err != nil {
+	// 	js.OnFail(ctx, i, req.EvalId, *curCpu, *curMem, tc-1, JudgementFailedMessage)
+	// 	return true, err
+	// }
+
+	// If this is an interactive problem, the verdict must be determine here first
+	if problemInfo.IsInteractive && ivert != domain.ACCEPTED {
+		msg, err := judgeutils.ReadInteractiveReportFile(i, req)
+		err = js.updateCase(ctx, req.EvalId, ivert, vert.Time, vert.MaxRss, msg, 1, *curCpu, *curMem, tc-1)
+		err = js.updateFinal(ctx, req.EvalId, ivert, *curCpu, *curMem, tc-1, 0, msg)
+		if err != nil {
+			i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
+		}
+		(*js.pService).Put(i)
+		return true, nil
 	}
 
+	checkerLocation := judgeutils.GetSubmissionCheckerAddr(i, req)
 	cvert, msg, e := js.checkVerdict(vert, checkerLocation, tcInputAddr, outaddr, tcAnsAddtr)
 	err = e
 	if err != nil {
@@ -320,18 +376,7 @@ func (js *JudgeServiceImpl) RunCase(
 	if cvert != domain.ACCEPTED {
 		curSuccess -= 1
 	}
-	err = js.updateCase(
-		ctx,
-		req.EvalId,
-		cvert,
-		vert.Time,
-		vert.MaxRss,
-		msg,
-		1,
-		*curCpu,
-		*curMem,
-		curSuccess,
-	)
+	err = js.updateCase(ctx, req.EvalId, cvert, vert.Time, vert.MaxRss, msg, 1, *curCpu, *curMem, curSuccess)
 
 	if err != nil {
 		i.Logger.Panic().Msgf("Database error, can't update verdict: %v", err)
@@ -348,7 +393,6 @@ func (js *JudgeServiceImpl) RunCase(
 	}
 	return false, nil
 }
-
 func (js *JudgeServiceImpl) JudgeICPC(
 	ctx context.Context,
 	i *domain.Isolate,
@@ -370,7 +414,7 @@ func (js *JudgeServiceImpl) JudgeICPC(
 		curMemoryUsage memory.Memory = 0
 	)
 	for tc := 1; tc <= problemInfo.TestNum; tc += 1 {
-		done, e := js.RunCase(ctx, i, lang, req, problemInfo, tc, &curCpuTime, &curMemoryUsage, problemInfo.IsInteractive)
+		done, e := js.RunCase(ctx, i, lang, req, problemInfo, tc, &curCpuTime, &curMemoryUsage)
 		err = e
 		if done {
 			(*js.pService).Put(i)

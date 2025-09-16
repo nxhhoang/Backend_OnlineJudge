@@ -43,7 +43,13 @@ func (cpp Cpp) Run(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.
 	i.Logger.Info().Msgf("Start running source code with id: %s", req.SubmissionId)
 
 	return req.IService.Run(
-		i, *rc, req, cpp.ExecutableName(),
+		i, *rc, req, utils.GetMappedFileNamePath(cpp.ExecutableName()),
+	)
+}
+
+func (cpp Cpp) RunCmdStrNoStream(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.SubmissionRequest) ([]string, error) {
+	return req.IService.RunCmdStrNoStream(
+		i, *rc, req, utils.GetMappedFileNamePath(cpp.ExecutableName()),
 	)
 }
 
@@ -51,8 +57,8 @@ func (cpp Cpp) Run(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.
 func (cpp Cpp) Compile(i *domain.Isolate, req *isolateservice.SubmissionRequest, stderr io.Writer) error {
 	// compile
 	rc := domain.RunConfig{
-		TimeLimit:    time.Second * 10,
-		MemoryLimit:  256 * memory.MiB,
+		TimeLimit:    time.Second * 60,
+		MemoryLimit:  1024 * memory.MiB,
 		MaxProcesses: 200,
 		InheritEnv:   true,
 		Stdout:       stderr,

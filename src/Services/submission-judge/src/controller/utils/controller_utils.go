@@ -7,6 +7,7 @@ import (
 	sci "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/sourcecode/impl"
 	si "github.com/bibimoni/Online-judge/submission-judge/src/domain/repository/submission/impl"
 	checkerimpl "github.com/bibimoni/Online-judge/submission-judge/src/service/checker/impl"
+	interactorimpl "github.com/bibimoni/Online-judge/submission-judge/src/service/interactor/impl"
 	ji "github.com/bibimoni/Online-judge/submission-judge/src/service/judge/impl"
 	pi "github.com/bibimoni/Online-judge/submission-judge/src/service/problem/impl"
 	"github.com/bibimoni/Online-judge/submission-judge/src/usecase/submission/interactor"
@@ -22,9 +23,10 @@ func InitInteractor(appContext appctx.AppContext) (*interactor.SubmissionInterac
 	sourcecodeRepo := sci.NewSourcecodeRepository(db)
 	problemSvc, err := pi.NewProblemService()
 	evalRepo := ei.NewEvaluationRepository(db)
-	checker := checkerimpl.NewCheckerService()
+	checkerS := checkerimpl.NewCheckerService()
+	interactorS := interactorimpl.NewInteractorService()
 	redis := ri.NewRedisSubmissionRepository(appContext.GetRedis())
-	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool(), problemSvc, evalRepo, checker, redis, submissionRepo, sourcecodeRepo)
+	judgeSvc := ji.NewJudgeServiceImpl(appContext.GetPool(), problemSvc, evalRepo, checkerS, interactorS, redis, submissionRepo, sourcecodeRepo)
 	if err != nil {
 		log.Error().Msgf("Can't initialize submit request, got error : %v", err)
 		return nil, err

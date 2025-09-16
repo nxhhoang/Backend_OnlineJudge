@@ -32,8 +32,10 @@ type Config struct {
 		IDOffset int
 		Amount   int
 	}
-	ProblemsDir    string
-	CheckerBinName string
+	ProblemsDir       string
+	CheckerBinName    string
+	InteractorBinName string
+	CrossRunJarName   string
 }
 
 func Load() (*Config, error) {
@@ -72,6 +74,8 @@ func Load() (*Config, error) {
 	cfg.Judge.IDOffset = judgeIdOffset
 
 	cfg.CheckerBinName = "checker"
+	cfg.InteractorBinName = "interactor"
+	cfg.CrossRunJarName = "CrossRun.jar"
 
 	return cfg, nil
 }

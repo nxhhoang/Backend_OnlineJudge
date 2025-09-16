@@ -14,5 +14,6 @@ type Language interface {
 	ExecutableName() string
 	FileExtension() string
 	Run(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.SubmissionRequest) error
+	RunCmdStrNoStream(i *domain.Isolate, rc *domain.RunConfig, req *isolateservice.SubmissionRequest) ([]string, error)
 	Compile(i *domain.Isolate, req *isolateservice.SubmissionRequest, stderr io.Writer) error
 }

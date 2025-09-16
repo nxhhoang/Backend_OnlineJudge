@@ -7,7 +7,8 @@ import (
 )
 
 type InteractorService interface {
-	RunInteractor(interactorAddr string, inputAddr string, outputAddr string, answerAddr string) (domain.Verdict, int, string, error)
+	// This function required jre in system and will run the CrossRun.jar file
+	RunInteractor(crossRunAddr, interactorAddr, inputAddr, outputAddr, answerAddr, reportAddr string, isolateStr []string) (domain.Verdict, int, string, error)
 }
 
 var FileNotExits = errors.New("File not exists on the system")

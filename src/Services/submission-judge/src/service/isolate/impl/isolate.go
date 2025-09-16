@@ -174,8 +174,21 @@ func (ir *IsolateServiceImpl) RunBinary(i *domain.Isolate, rc domain.RunConfig, 
 }
 
 func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest, toRun string, toRunArgs ...string) error {
+	cmdStr, err := ir.RunCmdStrNoStream(i, rc, req, toRun, toRunArgs...)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(cmdStr[0], cmdStr[1:]...)
+	cmd.Stdin = rc.Stdin
+	cmd.Stdout = rc.Stdout
+	cmd.Stderr = rc.Stderr
+
+	return cmd.Run()
+}
+
+func (ir *IsolateServiceImpl) RunCmdStrNoStream(i *domain.Isolate, rc domain.RunConfig, req *isolateservice.SubmissionRequest, toRun string, toRunArgs ...string) ([]string, error) {
 	if !i.Inited {
-		return isolateservice.ErrorIsolateNotInitialized
+		return nil, isolateservice.ErrorIsolateNotInitialized
 	}
 	i.Logger.Info().Msgf("Start running command!, toRun: %s", toRun)
 
@@ -185,7 +198,7 @@ func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *i
 
 	args, err := buildArgs(i, rc, req.SubmissionId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	args = append(args, "--run", "--", toRun)
@@ -194,10 +207,5 @@ func (ir *IsolateServiceImpl) Run(i *domain.Isolate, rc domain.RunConfig, req *i
 
 	i.Logger.Info().Msgf("Running command with args: %v", args)
 
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Stdin = rc.Stdin
-	cmd.Stdout = rc.Stdout
-	cmd.Stderr = rc.Stderr
-
-	return cmd.Run()
+	return args, nil
 }

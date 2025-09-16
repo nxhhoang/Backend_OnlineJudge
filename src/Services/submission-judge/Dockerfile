@@ -7,11 +7,11 @@ WORKDIR /app/isolate
 RUN make isolate
 
 # build starts here
-FROM golang:1.24.4 AS base
+FROM golang:latest AS base
 
 # RUN apt-get update && apt-get install -y openjdk-17-jdk mono-mcs fpc cython3 golang pandoc gccgo pypy3 python3-dev g++ gcc
 # Pull isolate binary from sandbox to base
-RUN apt-get update && apt-get install -y g++ gcc python3 pypy3
+RUN apt-get update && apt-get install -y g++ gcc python3 pypy3 default-jre
 COPY --from=sandbox /app/isolate /app/isolate
 WORKDIR /app/isolate
 RUN make install
