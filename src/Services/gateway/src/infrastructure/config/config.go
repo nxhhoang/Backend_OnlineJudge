@@ -19,6 +19,7 @@ type Config struct {
 	Endpoints struct {
 		Submission string
 		Auth       string
+		Problem    string
 	}
 }
 
@@ -42,6 +43,7 @@ func Load() *Config {
 
 	cfg.Endpoints.Submission = getEnv("GATEWAY_SUBMISSION_ENDPOINT", "")
 	cfg.Endpoints.Auth = getEnv("GATEWAY_AUTH_ENDPOINT", "")
+	cfg.Endpoints.Problem = getEnv("GATEWAY_PROBLEM_ENDPOINT", "")
 	return cfg
 }
 

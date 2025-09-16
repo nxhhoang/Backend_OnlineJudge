@@ -27,5 +27,11 @@ func main() {
 		r.Handle("/ws", proxy.WSSubmissionProxy(cfg.Endpoints.Submission))
 	})
 
+	r.Route("/problem", func(r chi.Router) {
+		r.Method("GET", "/all", proxy.ProblemApiProxy())
+		r.Method("GET", "/get/*/statement.pdf", proxy.ProblemApiProxy())
+		r.Method("GET", "/get/*/problem.json", proxy.ProblemApiProxy())
+	})
+
 	s.ListenAndServe()
 }

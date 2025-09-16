@@ -14,6 +14,11 @@ func SubmissionApiProxy() http.Handler {
 	return newProxy(cfg.Endpoints.Submission)
 }
 
+func ProblemApiProxy() http.Handler {
+	cfg := config.Load()
+	return newProxy(cfg.Endpoints.Problem)
+}
+
 func LoginApiProxy() http.Handler {
 	cfg := config.Load()
 	return newProxy(cfg.Endpoints.Auth)
