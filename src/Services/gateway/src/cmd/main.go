@@ -29,8 +29,8 @@ func main() {
 
 	r.Route("/problem", func(r chi.Router) {
 		r.Method("GET", "/all", proxy.ProblemApiProxy())
-		r.Method("GET", "/get/*/statement.pdf", proxy.ProblemApiProxy())
-		r.Method("GET", "/get/*/problem.json", proxy.ProblemApiProxy())
+		r.Method("GET", "/get/{param}/statement.pdf", proxy.ProblemApiProxy())
+		r.Method("GET", "/get/{param}/problem.json", proxy.ProblemApiProxy())
 	})
 
 	s.ListenAndServe()
