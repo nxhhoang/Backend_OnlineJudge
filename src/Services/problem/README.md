@@ -4,6 +4,14 @@
 ```
 - POST /problem/add?problemId=...
 - GET /problem/get/${problemId}/{static files}
+- GET /problem/all
+Return:
+{
+	"list": [
+		352118,
+		440176
+	]
+}
 ```
 
 ### Problem directory structure
@@ -20,6 +28,8 @@
 |   |   +-- 1
 |   |   +-- 2
 |   |   +-- ...
++-- interactor (interactive problems)
++-- CrossRun.jar (interactive problems)
 ```
 ### Sample of a problem.json
 ```json

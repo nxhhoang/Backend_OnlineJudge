@@ -38,7 +38,7 @@ func GetLastestPackage(problemId uint64) (uint64, error) {
 		return 0, err
 	}
 
-	fmt.Println(string(body))
+	// fmt.Println(string(body))
 
 	var return_json returnStruct
 	if err := json.Unmarshal(body, &return_json); err != nil {

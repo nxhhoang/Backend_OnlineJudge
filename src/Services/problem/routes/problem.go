@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func ProblemRoute(router fiber.Router) {
@@ -39,6 +40,16 @@ func ProblemRoute(router fiber.Router) {
 		}
 
 		return c.SendString(strconv.FormatInt(int64(packageId), 10))
+	})
+
+	router.Get("all", func(c *fiber.Ctx) error {
+		list, err := storage.GetAllProblems()
+		if err != nil {
+			return c.Status(500).SendString(err.Error())
+		}
+		return c.JSON(bson.M{
+			"list": list,
+		})
 	})
 
 	router.Static("/get/", "/storage")
