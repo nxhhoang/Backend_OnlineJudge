@@ -54,3 +54,4 @@ type RunVerdict struct {
 
 var CompilationError = errors.New("Compilation Error")
 var JugdgementFailed = errors.New("Something went wrong when trying to run the source code")
+var UnsupportedSubmissionType = errors.New("This type of problem isn't supported")

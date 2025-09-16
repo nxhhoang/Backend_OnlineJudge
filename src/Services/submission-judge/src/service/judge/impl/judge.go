@@ -125,10 +125,12 @@ func (js *JudgeServiceImpl) JudgeStart(ctx context.Context, lang pkg.Language, r
 	case domain.SubmissionType(domain.ICPC):
 		err = js.JudgeICPC(ctx, i, lang, req, problemInfo)
 	default:
+		(*js.pService).Put(i)
 		i.Logger.Error().Msgf("Other submission type is not supported")
+		err = judge.UnsupportedSubmissionType
 	}
 
-	return nil
+	return err
 }
 
 // This function will help copy/create the nessessary files into the isolate working directory
